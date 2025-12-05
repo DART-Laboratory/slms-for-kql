@@ -1,0 +1,148 @@
+[
+    {
+        "tables": [
+            "DeviceTvmSoftwareVulnerabilitiesKB"
+        ],
+        "theme": "Detect: Look for events related to a security attack",
+        "nlq": "Count high/critical exploits on devices in the last 30 days, showing CVEs affecting multiple software titles.",
+        "kql": "DeviceTvmSoftwareVulnerabilitiesKB\n| where VulnerabilitySeverityLevel in (\"High\", \"Critical\")\n| where IsExploitAvailable == 1\n| where LastModifiedTime > ago(30d)\n| summarize count() by CveId, VulnerabilitySeverityLevel, AffectedSoftware\n| where count_ > 1\n| order by count_ desc\n",
+        "similarity_score": 0.5666666666666661
+    },
+    {
+        "tables": [
+            "DeviceTvmSoftwareVulnerabilities",
+            "DeviceInfo"
+        ],
+        "theme": "Expansion: Searches for additional contextual understanding",
+        "nlq": "Find internet-facing, onboarded devices with critical/high vulnerabilities needing mitigation, listing counts per device and software.",
+        "kql": "DeviceInfo\n| where IsInternetFacing == true and OnboardingStatus == \"Onboarded\"\n| join kind=inner DeviceTvmSoftwareVulnerabilities on DeviceId\n| where VulnerabilitySeverityLevel in (\"High\", \"Critical\") and CveMitigationStatus != \"Mitigated\"\n| summarize count() by DeviceName, OSPlatform, SoftwareName, VulnerabilitySeverityLevel\n| order by count_ desc\n",
+        "similarity_score": 0.6341463414634141
+    },
+    {
+        "tables": [
+            "AlertInfo"
+        ],
+        "theme": "Report: Provide summary statistics for reporting",
+        "nlq": "Count high/critical alerts from the last 30 days, grouped by category, ordered by count.",
+        "kql": "AlertInfo\n| where Timestamp > ago(30d)\n| where Severity in (\"High\", \"Critical\")\n| summarize count() by Category, Severity, ServiceSource, DetectionSource\n| order by count_ desc\n",
+        "similarity_score": 0.6153846153846151
+    },
+    {
+        "tables": [
+            "EmailAttachmentInfo"
+        ],
+        "theme": "Report: Provide summary statistics for reporting",
+        "nlq": "Analyze email attachments with threats: count, summarize file sizes, and list threat types/names daily, ordered by time.",
+        "kql": "EmailAttachmentInfo\n| where isnotempty(ThreatTypes)\n| summarize count(),\n    dcount(NetworkMessageId),\n    sum(FileSize),\n    make_set(ThreatTypes),\n    make_set(ThreatNames),\n    make_set(DetectionMethods)\n    by bin(Timestamp, 1d), FileType\n| order by Timestamp asc\n",
+        "similarity_score": 0.555555555555555
+    },
+    {
+        "tables": [
+            "DeviceTvmSecureConfigurationAssessment"
+        ],
+        "theme": "Detect: Look for events related to a security attack",
+        "nlq": "Find high/critical security configuration issues on devices in the last week, counting non-compliance, and ranking devices.",
+        "kql": "DeviceTvmSecureConfigurationAssessment\n| where Timestamp > ago(7d)\n| where IsApplicable == true and IsCompliant == false\n| where ConfigurationImpact in (\"High\", \"Critical\")\n| summarize NonCompliantCount = count() by DeviceId, DeviceName, OSPlatform, ConfigurationCategory, ConfigurationSubcategory\n| where NonCompliantCount > 0\n| order by NonCompliantCount desc\n",
+        "similarity_score": 0.628571428571428
+    },
+    {
+        "tables": [
+            "DeviceTvmSecureConfigurationAssessment"
+        ],
+        "theme": "Explore: Look for signs or hints of a security attack",
+        "nlq": "Find devices failing >5 security checks in the last week and list the details.",
+        "kql": "DeviceTvmSecureConfigurationAssessment\n| where Timestamp > ago(7d)\n| where IsApplicable == true and IsCompliant == false\n| summarize NonCompliantCount = count() by DeviceId, DeviceName, OSPlatform, ConfigurationCategory, ConfigurationSubcategory\n| where NonCompliantCount > 5\n| project DeviceId, DeviceName, OSPlatform, ConfigurationCategory, ConfigurationSubcategory, NonCompliantCount\n",
+        "similarity_score": 0.6451612903225801
+    },
+    {
+        "tables": [
+            "DeviceEvents"
+        ],
+        "theme": "Remediate: Identify events for a given entity or asset",
+        "nlq": "Count device actions by type and day for a specific device or account, visualizing the results.",
+        "kql": "DeviceEvents\n| where Timestamp > ago(7d)\n| where DeviceId == \"TARGET_DEVICE_ID\" or AccountName == \"TARGET_ACCOUNT_NAME\"\n| summarize count() by ActionType, bin(Timestamp, 1d)\n| render timechart\n",
+        "similarity_score": 0.708333333333333
+    },
+    {
+        "tables": [
+            "IdentityDirectoryEvents"
+        ],
+        "theme": "Report: Provide summary statistics for reporting",
+        "nlq": "Count security actions daily from identity logs in the last 30 days, visualizing changes over time.",
+        "kql": "IdentityDirectoryEvents\n| where Timestamp >= ago(30d)\n| where ActionType in (\"PasswordChange\", \"AccountLockout\", \"AccountUnlock\", \"AccountCreated\", \"AccountDeleted\", \"AccountDisabled\", \"AccountEnabled\")\n| summarize count() by ActionType, bin(Timestamp, 1d)\n| render timechart\n",
+        "similarity_score": 0.6000000000000001
+    },
+    {
+        "tables": [
+            "DeviceTvmSecureConfigurationAssessment"
+        ],
+        "theme": "Explore: Look for signs or hints of a security attack",
+        "nlq": "Find the top 10 risky devices with security misconfigurations from the last week.",
+        "kql": "DeviceTvmSecureConfigurationAssessment\n| where Timestamp > ago(7d)\n| where IsApplicable == true\n| summarize NonCompliantCount = countif(IsCompliant == false) by DeviceId, DeviceName, OSPlatform\n| where NonCompliantCount > 0\n| extend PotentialRiskScore = NonCompliantCount \n| top 10 by PotentialRiskScore desc\n",
+        "similarity_score": 0.6666666666666661
+    },
+    {
+        "tables": [
+            "IdentityDirectoryEvents"
+        ],
+        "theme": "Remediate: Identify events for a given entity or asset",
+        "nlq": "Find user activity events for \"user@example.com\" in the last 7 days; count events by type, user, and app.",
+        "kql": "IdentityDirectoryEvents\n| where Timestamp > ago(7d)\n| where AccountUpn == \"user@example.com\" or TargetAccountUpn == \"user@example.com\" or AccountName == \"user\"\n| extend Account = coalesce(AccountUpn, AccountName)\n| summarize EventCount = count() by ActionType, Account, Application\n| order by EventCount desc\n",
+        "similarity_score": 0.5
+    },
+    {
+        "tables": [
+            "DeviceTvmSecureConfigurationAssessment"
+        ],
+        "theme": "Report: Provide summary statistics for reporting",
+        "nlq": "Analyze device security configurations; count compliant/non-compliant devices by OS and category; calculate compliance percentage.",
+        "kql": "DeviceTvmSecureConfigurationAssessment\n| where Timestamp > ago(30d)\n| where ConfigurationCategory in (\"Security Baseline\", \"Endpoint Detection and Response\", \"Data Loss Prevention\")\n| summarize\n    TotalDevices = dcount(DeviceId),\n    CompliantDevices = dcountif(DeviceId, IsCompliant == true),\n    NonCompliantDevices = dcountif(DeviceId, IsCompliant == false),\n    AvgComplianceRate = avg(toint(IsCompliant))\n    by OSPlatform, ConfigurationCategory\n| extend CompliancePercentage = round(AvgComplianceRate * 100, 2)\n| project OSPlatform, ConfigurationCategory, TotalDevices, CompliantDevices, NonCompliantDevices, CompliancePercentage\n| order by OSPlatform, ConfigurationCategory\n",
+        "similarity_score": 0.50943396226415
+    },
+    {
+        "tables": [
+            "DeviceTvmSoftwareVulnerabilities"
+        ],
+        "theme": "Report: Provide summary statistics for reporting",
+        "nlq": "Summarize device vulnerabilities by OS, counting severities, affected devices/software, and calculating critical percentage.",
+        "kql": "DeviceTvmSoftwareVulnerabilities\n| summarize \n    TotalVulnerabilities = count(),\n    CriticalVulnerabilities = countif(VulnerabilitySeverityLevel == \"Critical\"),\n    HighVulnerabilities = countif(VulnerabilitySeverityLevel == \"High\"),\n    MediumVulnerabilities = countif(VulnerabilitySeverityLevel == \"Medium\"),\n    LowVulnerabilities = countif(VulnerabilitySeverityLevel == \"Low\"),\n    DistinctDevicesAffected = dcount(DeviceId),\n    DistinctSoftwareAffected = dcount(SoftwareName)\nby OSPlatform\n| extend CriticalPercentage = round(CriticalVulnerabilities * 100.0 / TotalVulnerabilities, 2)\n| project OSPlatform, TotalVulnerabilities, CriticalVulnerabilities, HighVulnerabilities, MediumVulnerabilities, LowVulnerabilities, DistinctDevicesAffected, DistinctSoftwareAffected, CriticalPercentage\n| order by TotalVulnerabilities desc\n",
+        "similarity_score": 0.5
+    },
+    {
+        "tables": [
+            "AADSpnSignInEventsBeta",
+            "DeviceTvmSoftwareInventory"
+        ],
+        "theme": "Detect: Look for events related to a security attack",
+        "nlq": "Finds frequent, failed, non-managed app logins in the last week, counting errors by application.",
+        "kql": "AADSpnSignInEventsBeta\n| where Timestamp > ago(7d)\n| where ErrorCode != 0\n| where IsManagedIdentity == false\n| summarize count() by Application, ApplicationId, ServicePrincipalName, ServicePrincipalId, ResourceDisplayName, ResourceId, ResourceTenantId, Country, City, ErrorCode\n| where count_ > 10\n| order by count_ desc\n",
+        "similarity_score": 0.6451612903225801
+    },
+    {
+        "tables": [
+            "EmailUrlInfo"
+        ],
+        "theme": "Report: Provide summary statistics for reporting",
+        "nlq": "For each ReportId in EmailUrlInfo, count URLs, unique emails, domains, and list locations.",
+        "kql": "EmailUrlInfo\n| summarize count(), dcount(NetworkMessageId), dcount(UrlDomain), make_set(UrlLocation) by ReportId\n",
+        "similarity_score": 0.5882352941176471
+    },
+    {
+        "tables": [
+            "DeviceNetworkInfo"
+        ],
+        "theme": "Explore: Look for signs or hints of a security attack",
+        "nlq": "Find devices with suspicious network adapters in the last day, showing device ID, name, and count.",
+        "kql": "DeviceNetworkInfo\n| where Timestamp > ago(1d)\n| where NetworkAdapterStatus != \"Up\" or NetworkAdapterType == \"Virtual\" or TunnelType != \"None\"\n| extend IsSuspiciousAdapter = iif(NetworkAdapterStatus != \"Up\" or NetworkAdapterType == \"Virtual\" or TunnelType != \"None\", 1, 0)\n| summarize SuspiciousAdapterCount = sum(IsSuspiciousAdapter) by DeviceId, DeviceName\n| where SuspiciousAdapterCount > 0\n| project DeviceId, DeviceName, SuspiciousAdapterCount\n| order by SuspiciousAdapterCount desc\n",
+        "similarity_score": 0.55
+    },
+    {
+        "tables": [
+            "DeviceFileCertificateInfo"
+        ],
+        "theme": "Remediate: Identify events for a given entity or asset",
+        "nlq": "Find devices with untrusted, signed certificates seen more than once in the last 30 days.",
+        "kql": "DeviceFileCertificateInfo\n| where Timestamp >= ago(30d)\n| where IsSigned == true and IsTrusted == false\n| summarize count() by DeviceId, DeviceName, SHA1, Signer, Issuer\n| where count_ > 1\n| project DeviceId, DeviceName, SHA1, Signer, Issuer, count_\n",
+        "similarity_score": 0.785714285714285
+    }
+]

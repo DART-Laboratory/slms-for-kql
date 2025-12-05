@@ -1,0 +1,767 @@
+id,status,source,tables,prompt,kql
+sample_0001,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-PowershellConnectingtoInternet.kql,DeviceNetworkEvents,Find users that are connecting to internet endpoints via PowerShell commands,"DeviceNetworkEvents
+| project
+    TimeGenerated,
+    InitiatingProcessAccountName,
+    InitiatingProcessCommandLine,
+    DeviceName,
+    LocalIPType,
+    LocalIP,
+    RemoteIPType,
+    RemotePort,
+    RemoteIP,"
+sample_0002,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-FindDeviceswithmostSmartScreenEvents.kql,DeviceEvents,Find the devices in your environment triggering the most Defender SmartScreen events,"DeviceEvents
+| where TimeGenerated > ago (30d)
+| where ActionType startswith ""SmartScreen""
+| extend Experience = tostring(AdditionalFields.Experience)
+| where isnotempty(Experience)
+| summarize
+    ['Count of SmartScreen Events']=count(),
+    ['List of SmartScreen Event Types']=make_set(Experience)
+    by DeviceName
+| sort by ['Count of SmartScreen Events'] desc"
+sample_0003,DEFENDER_OK,Sentinel-Queries/Defender for Identity/IdentityLogonEvents-SummarizeClearTextLDAP.kql,IdentityLogonEvents,Summarize the accounts in your environment using cleartext LDAP connections,"IdentityLogonEvents
+| where Timestamp > ago (30d)
+| where LogonType == ""LDAP cleartext""
+| summarize
+    ['Total connection count']=count(),
+    ['Distinct destination device count']=dcount(DestinationDeviceName),
+    ['List of destination devices']=make_set(DestinationDeviceName)
+    by AccountUpn
+| sort by ['Distinct destination device count'] desc"
+sample_0005,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-FileDownloadedfromO365thenCopiedtoUSB.kql,IdentityInfo,"Detects a user that downloaded a file from O365 and then wrote the same file to USB, matches on both filename and the user","IdentityInfo
+        | where TimeGenerated > ago (21d)
+        | summarize arg_max(TimeGenerated, *) by AccountUPN)
+        on $left.UserId == $right.AccountUPN
+    | project DownloadTime, SourceFileName, UserId, AccountName
+;"
+sample_0006,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-DetectURLopenedfromISOfile.kql,DeviceFileEvents,"Detect when a user mounts an ISO file and then within 20 minutes launches a browser. These events could be unrelated because a BrowserLaunchedToOpenUrl event doesn't confirm if the lnk file was in the ISO file.
+The detection is just based on time between mounting an ISO file and then launching a URL.","DeviceFileEvents
+| where TimeGenerated > ago(1d)
+| where ActionType == ""FileCreated""
+| where FileName endswith ""iso.lnk""
+| project
+    ISOMountTime=TimeGenerated,
+    DeviceName,
+    FileName,
+    FolderPath,"
+sample_0009,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Firewall Queries/Devices-NoSMB.kql,DeviceInfo,Find devices that have had no inbound SMB connections in the last 30 days to help build firewall policy,"DeviceInfo
+| where Timestamp > ago (30d)
+| distinct DeviceId, DeviceName
+| where DeviceId !in (devices)"
+sample_0010,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-DetectInvalidCertificates.kql,DeviceEvents,Detect invalid certificates,"DeviceEvents
+| where ActionType == ""AntivirusReport""
+| extend ParsedAdditionalFields = parse_json(AdditionalFields)
+| evaluate bag_unpack(ParsedAdditionalFields)
+| where Signer startswith ""INVALID"""
+sample_0011,DEFENDER_OK,Sentinel-Queries/Defender for Cloud Apps/DCA-FindNewEvents.kql,CloudAppEvents,Find new events in Defender for Cloud Apps seen in the last week vs the previously 90 days,"CloudAppEvents
+| where TimeGenerated > ago(7d)
+| extend Operation = tostring(RawEventData.Operation)
+| extend UserId = tostring(RawEventData.UserId)
+| extend Workload = tostring(RawEventData.Workload)
+| extend Activity = strcat(Workload, "" - "", Operation)
+| where Activity !in (knownactivities)
+| summarize ['First Time Seen']=min(TimeGenerated), Count=count() by Activity
+| sort by Count desc"
+sample_0012,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-SummarizeRDPConnections.kql,DeviceNetworkEvents,"Summarize your devices by their RDP activity. The data is sorted to show total outbound RDP connections, a count of distinct RDP connections and the list of IP's connected to.","DeviceNetworkEvents
+| where Timestamp > ago(30d)
+| where ActionType == ""ConnectionSuccess""
+| where RemotePort == ""3389""
+| where InitiatingProcessCommandLine <> ""\""Microsoft.Tri.Sensor.exe\""""
+| summarize
+    ['RDP Outbound Connection Count']=count(),
+    ['RDP Distinct Outbound Endpoint Count']=dcount(RemoteIP),
+    ['RDP Outbound Endpoints']=make_set(RemoteIP)
+    by DeviceName
+| sort by ['RDP Distinct Outbound Endpoint Count'] desc"
+sample_0014,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-WindowsVersionPivotTable.kql,DeviceInfo,Create a pivot table of all Windows OS versions in your environment,"DeviceInfo
+| where TimeGenerated > ago(30d)
+| where isnotempty(OSBuild)
+| summarize arg_max(TimeGenerated, *) by DeviceId
+| where isnotempty(OSPlatform)
+| evaluate pivot(OSBuild, count(), OSPlatform)
+| where OSPlatform contains ""Windows""
+| sort by OSPlatform desc"
+sample_0015,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Firewall Queries/Devices-NoSSH.kql,DeviceInfo,Find devices that have had no inbound SSH connections in the last 30 days to help build firewall policy,"DeviceInfo
+| where Timestamp > ago (30d)
+| distinct DeviceId, DeviceName
+| where DeviceId !in (devices)"
+sample_0017,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-DetectMacroConnectingtoInternet.kql,DeviceNetworkEvents,"Detect when an Excel macro connects to the internet.
+Some IPs returned shown may be Microsoft telemetry but these events are still worth investigating.","DeviceNetworkEvents
+| where InitiatingProcessFileName contains ""excel.exe""
+| where InitiatingProcessCommandLine contains "".xlsm"" or InitiatingProcessCommandLine contains "".xltm""
+| where RemoteIPType == ""Public""
+| where RemoteUrl !endswith ""outlook.com""
+    and RemoteUrl !endswith ""office.com""
+    and RemoteUrl !endswith ""microsoft.com""
+    and RemoteUrl !endswith ""office365.com""
+    and RemoteUrl !endswith ""live.com""
+    and RemoteUrl !endswith ""office.net""
+| project
+    Timestamp,
+    DeviceName,
+    InitiatingProcessCommandLine,
+    LocalIP,
+    RemoteIP,
+    RemotePort,"
+sample_0018,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-VisualizePort22Proccesses.kql,DeviceNetworkEvents,Summarize and visualize the different parent filenames initiating TCP port 22 connections,"DeviceNetworkEvents
+| where Timestamp > ago(30d)
+| where ActionType == ""ConnectionSuccess""
+| where RemotePort == 22
+| where isnotempty(InitiatingProcessFileName)
+| summarize Count=count() by InitiatingProcessFileName
+| top 20 by Count
+| render piechart"
+sample_0019,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-DetectInternaltoExternalTeamviewer.kql,DeviceNetworkEvents,Detects successful TeamViewer connections from internal to external IP addresses,"DeviceNetworkEvents
+| where InitiatingProcessFileName contains ""teamviewer.exe""
+| where ActionType == ""ConnectionSuccess""
+| where LocalIPType == ""Private""
+| where RemoteIPType == ""Public""
+| project TimeGenerated,
+    DeviceName,
+    InitiatingProcessAccountName,
+    InitiatingProcessFileName,
+    LocalIP,"
+sample_0021,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-SSHTrafficOnNonStandardPort.kql,DeviceNetworkEvents,Detect SSH traffic that isn't on port 22 connecting to public IP addresses,"DeviceNetworkEvents
+| where ActionType == ""NetworkSignatureInspected""
+| extend AF = parse_json(AdditionalFields)
+| extend NetworkSignature = AF.SignatureName
+| where NetworkSignature == ""SSH"" and RemotePort != 22
+| where not(ipv4_is_private(RemoteIP))
+| where not(ipv4_is_match(RemoteIP,'169.0.0.0/8')) | project
+    TimeGenerated,
+    DeviceName,
+    NetworkSignature,
+    LocalIP,
+    LocalPort,
+    RemoteIP,
+    RemotePort,"
+sample_0022,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-AccountswithMostLocalAdmin.kql,DeviceLogonEvents,Find which of your accounts have logged onto the most devices with local admin credentials. These accounts are potential targets for lateral movement and privilege escalation,"DeviceLogonEvents
+| where TimeGenerated > ago(30d)
+| project DeviceName, ActionType, LogonType, AdditionalFields, InitiatingProcessCommandLine, AccountName, IsLocalAdmin
+| where ActionType == ""LogonSuccess""
+| where LogonType == ""Interactive""
+| where AdditionalFields.IsLocalLogon == true
+| where InitiatingProcessCommandLine == ""lsass.exe""
+| summarize
+    ['Local Admin Count']=dcountif(DeviceName,IsLocalAdmin == ""true""),
+    ['Local Admins']=make_set_if(DeviceName, IsLocalAdmin == ""true"")
+    by AccountName
+| sort by ['Local Admin Count'] desc"
+sample_0023,DEFENDER_OK,Sentinel-Queries/Defender for Cloud Apps/DCA-RiskEventFollowedbyMailboxRuleChanges.kql,CloudAppEvents,Alert when a user flags an Azure AD risk event followed by creating or updating inbox rules within a short time frame,"CloudAppEvents
+    | where TimeGenerated > ago (1d)
+    | extend Operation = tostring(RawEventData.Operation)
+    | where Operation in (""New-InboxRule"", ""Set-InboxRule"")
+    | extend UserId = tostring(RawEventData.UserId)
+    | project RuleTime=TimeGenerated, UserId, MailForwardIP=IPAddress, ActivityObjects
+    )
+    on $left.UserPrincipalName == $right.UserId
+| extend ['Minutes Between Events']=datetime_diff(""minute"", RuleTime, RiskTime)
+| where ['Minutes Between Events'] < 120
+| project-away UserId
+| project-reorder
+    UserPrincipalName,
+    RiskTime,
+    RuleTime,
+    ['Minutes Between Events'],
+    RiskyIP,
+    MailForwardIP,
+    RiskEventType,"
+sample_0024,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-Top20RandomActions.kql,DeviceEvents,"Find the top 20 of a collection of varied data sets, no real detections in here just interesting data that is captured","DeviceEvents
+| where ActionType == ""UsbDriveMounted""
+| extend AF = parse_json(AdditionalFields)
+| extend Manufacturer = tostring(AF.Manufacturer)
+| extend ProductName = tostring(AF.ProductName)
+| where isnotempty(Manufacturer) or isnotempty(Manufacturer)
+| extend ['USB Drive Model']= strcat(Manufacturer, ""-"", ProductName)
+| summarize Count=count()by ['USB Drive Model']
+| top 20 by Count"
+sample_0028,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-ASRAudit.kql,DeviceEvents,Summarize attack surface reduction audit hits for each device,"DeviceEvents
+| where TimeGenerated > ago (1d)
+| where ActionType startswith ""Asr""
+| extend isAudit = tostring(AdditionalFields.IsAudit)
+| where isAudit = true
+| project
+    TimeGenerated,
+    ActionType,
+    DeviceName,
+    FileName,
+    InitiatingProcessAccountDomain,
+    InitiatingProcessAccountName,
+    InitiatingProcessCommandLine,
+    InitiatingProcessParentFileName,"
+sample_0029,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-DetectCertUtilConnectingExternally.kql,DeviceNetworkEvents,"Detects when certutil is used to connect to a public IP. This could indicate abuse of cert util, see - https://www.avira.com/en/blog/certutil-abused-by-attackers-to-spread-threats","DeviceNetworkEvents
+| where TimeGenerated > ago (7d)
+| project
+    TimeGenerated,
+    DeviceName,
+    InitiatingProcessAccountName,
+    InitiatingProcessCommandLine,
+    LocalIPType,
+    LocalIP,
+    RemoteIPType,
+    RemoteIP,
+    RemoteUrl,"
+sample_0032,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-SummarizeSmartScreenUntrustedFiles.kql,DeviceEvents,Summarize the most common files in your environment flagging Smartscreen untrusted warnings,"DeviceEvents
+| where TimeGenerated > ago (30d)
+| where ActionType startswith ""SmartScreen""
+| extend SmartScreenExperience = tostring(AdditionalFields.Experience)
+| where SmartScreenExperience == ""Untrusted""
+| summarize Count=count()by FileName
+| sort by Count"
+sample_0033,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-msdtPotentialExploit.kql,DeviceProcessEvents,"Detections based on the emerging information found here - https://twitter.com/nao_sec/status/1530196847679401984, https://twitter.com/GossiTheDog/status/1531018365606707206 and https://doublepulsar.com/follina-a-microsoft-office-code-execution-vulnerability-1a47fce5629e
+Microsoft Sentinel queries
+Search your device process events for msdt.exe being generated by Outlook, Word or Excel - should be low noise and high value alerts, seems very rare behaviour","DeviceProcessEvents
+    | where TimeGenerated > ago (1d)
+    | where InitiatingProcessCommandLine contains ""msdt.exe"" and ProcessCommandLine !contains ""msdt.exe""
+    )
+ on InitiatingProcessCommandLine, ProcessCommandLine
+ | project TimeGenerated, DeviceName, InitiatingProcessAccountName, InitiatingProcessCommandLine, ProcessCommandLine"
+sample_0034,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-DetectLocalUserCreated.kql,DeviceEvents,Detect when a local user account is created on an endpoint,"DeviceEvents
+| where TimeGenerated > ago(7d)
+| where ActionType == ""UserAccountCreated""
+| where AccountName != ""defaultuser1""
+| project
+    TimeGenerated,
+    DeviceName,
+    ['Account Created Name']=AccountName,
+    Actor=InitiatingProcessAccountName"
+sample_0036,DEFENDER_OK,Sentinel-Queries/Defender for Cloud Apps/DCA-PivotTableAdminActions.kql,CloudAppEvents,"Create a pivot table of all actions in Defender for Cloud Apps by your privileged users over the last 7 days
+Lookup the IdentityInfo table for any users holding a privileged role","CloudAppEvents
+| where TimeGenerated > ago(7d)
+| extend Operation = tostring(RawEventData.Operation)
+| extend UserId = tostring(RawEventData.UserId)
+| extend Workload = tostring(RawEventData.Workload)
+| extend Activity = strcat(Workload, "" - "", Operation)
+| where UserId in~ (privusers)
+| evaluate pivot(Activity, count(), UserId)"
+sample_0039,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Firewall Queries/Devices-SummarizeInboundTraffic.kql,DeviceNetworkEvents,"Summary of inbound traffic, will find the total count, distcount count of devices and the list of inbound devices per port","DeviceNetworkEvents
+| where TimeGenerated > ago (30d)
+| where ActionType == ""InboundConnectionAccepted""
+| where LocalPort in (""22"",""80"",""139"",""443"",""445"",""3389"",""8080"")
+| summarize ['Total Count']=count(), ['Distinct Count of Inbound Devices']=dcount(RemoteIP), ['List of Inbound Devices']=make_set(RemoteIP) by DeviceName, LocalPort
+| sort by DeviceName asc, LocalPort asc"
+sample_0041,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-SummarizeLocalLogonActivity.kql,DeviceLogonEvents,Summarize the local (non domain) logon activity for your devices for both successful and failed logons. You may have users using a local account to bypass security policy,"DeviceLogonEvents
+| where Timestamp > ago(30d)
+| where AccountDomain == DeviceName
+| where LogonType == @""Interactive""
+| where RemoteIPType != ""Loopback""
+| summarize
+    ['Count of successful local logon attempts']=countif(ActionType == ""LogonSuccess""),
+    ['Distinct count of successful local logon attempts']=dcountif(AccountName, ActionType == ""LogonSuccess""),
+    ['List of succesful local account logons']=make_set_if(AccountName, ActionType == ""LogonSuccess""),
+    ['Count of failed local logon attempts']=countif(ActionType == ""LogonFailed""),
+    ['Distinct count of failed local logon attempts']=dcountif(AccountName, ActionType == ""LogonFailed""),
+    ['List of failed local account logons']=make_set_if(AccountName, ActionType == ""LogonFailed"")
+    by DeviceName
+| project-reorder
+    DeviceName,
+    ['Count of successful local logon attempts'],
+    ['Distinct count of successful local logon attempts'],
+    ['List of succesful local account logons'],
+    ['Count of failed local logon attempts'],
+    ['Distinct count of failed local logon attempts'],
+    ['List of failed local account logons']"
+sample_0042,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-FirstTimeWhoAmI.kql,DeviceProcessEvents,Detect when a 'whoami' command is sent for the first time from a device & account combination not seen before,"DeviceProcessEvents
+    | where TimeGenerated > ago(1d)
+    | project
+        TimeGenerated,
+        DeviceName,
+        InitiatingProcessAccountName,"
+sample_0045,DEFENDER_OK,Sentinel-Queries/Defender for Cloud Apps/DCA-DetectAADInternalsUse.kql,CloudAppEvents,"Detect AADInternals use, where we see a domain changed from managed to federated, and the issuer contains any.sts or the issuer suffix is 8 characters, a combination of letters and numbers","CloudAppEvents
+| where ActionType == ""Set domain authentication.""
+| extend Actor = tostring(RawEventData.UserId)
+| extend mp=parse_json(RawEventData.ModifiedProperties)
+| extend DomainName = tostring(parse_json(tostring(RawEventData.Target))[0].ID)
+| mv-apply mp on (
+where mp.Name == ""IssuerUri""
+| extend Issuer=mp.NewValue
+)
+| extend mp=parse_json(RawEventData.ModifiedProperties)
+| mv-apply mp on (
+where mp.Name == ""LiveType""
+| extend OldDomainType = mp.OldValue
+| extend NewDomainType = mp.NewValue
+)
+| project TimeGenerated, Actor, DomainName, OldDomainType, NewDomainType, Issuer
+| parse Issuer with * @'://' Issuer @'""' *
+| extend IssuerSuffix = split(Issuer, '/')[-1]
+| where OldDomainType has ""Managed"" and NewDomainType has ""Federated""
+| where Issuer has ""any.sts"" or IssuerSuffix matches regex ""^[a-zA-Z0-9]{8}$"""
+sample_0048,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-KnownRansomwareVuln.kql,DeviceInfo,Query the list of Known Exploited Vulnerabilities provided by CISA - https://www.cisa.gov/known-exploited-vulnerabilities-catalog and find any devices that have vulnerabilities known to be used with ransomware,"DeviceInfo
+| where IsInternetFacing
+| summarize arg_max(Timestamp, *) by DeviceId
+| distinct DeviceName;"
+sample_0052,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-DetectURLopenedfromISOfile.kql,DeviceEvents,"Detect when a user mounts an ISO file and then within 20 minutes launches a browser. These events could be unrelated because a BrowserLaunchedToOpenUrl event doesn't confirm if the lnk file was in the ISO file.
+The detection is just based on time between mounting an ISO file and then launching a URL.","DeviceEvents
+    | where TimeGenerated > ago(1d)
+    | where ActionType == ""BrowserLaunchedToOpenUrl""
+    | where RemoteUrl startswith ""http""
+    | project
+        URLOpenTime=TimeGenerated,
+        DeviceName,
+        InitiatingProcessAccountName,
+        RemoteIP,
+        RemoteUrl,"
+sample_0053,DEFENDER_OK,Sentinel-Queries/Defender for Cloud Apps/DCA-ExchangeOnlineEventsduringRiskySignin.kql,CloudAppEvents,Create a pivot table of all actions taken during a risky sign in,"CloudAppEvents
+| where Timestamp > ago(7d)
+| extend RawEventData = parse_json(RawEventData)
+| extend SessionId = RawEventData.SessionId
+| where isnotempty(SessionId)
+| where SessionId in (riskysignins)
+| extend Activity = strcat(Application, "" - "", ActionType)
+| evaluate pivot(Activity, count(), AccountDisplayName)"
+sample_0054,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-NewHashAccessingLSASS.kql,DeviceEvents,Detect when a process with a hash not previously seen before in your environment accesses lsass.exe via an open process API call,"DeviceEvents
+| where TimeGenerated > ago (1d)
+| where ActionType == ""OpenProcessApiCall""
+| where FileName == ""lsass.exe""
+| where InitiatingProcessSHA256 !in (knownhashes)
+| extend DesiredAccess = tostring(AdditionalFields.DesiredAccess)
+| distinct
+    DeviceName,
+    InitiatingProcessAccountName,
+    InitiatingProcessCommandLine,"
+sample_0055,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Vuln-HighestExposedDevices.kql,DeviceTvmSoftwareVulnerabilities,Summarize your devices by which Microsoft CVEs they are vulnerable too. The data is summarized into severity and ordered by the most exposed devices.,"DeviceTvmSoftwareVulnerabilities
+| summarize ['Critical Severity Vulnerabilities']=make_set_if(CveId, SoftwareVendor == ""microsoft"" and VulnerabilitySeverityLevel == ""Critical""),
+    ['High Severity Vulnerabilities']=make_set_if(CveId, SoftwareVendor == ""microsoft"" and VulnerabilitySeverityLevel == ""High""),
+    ['Medium Severity Vulnerabilities']=make_set_if(CveId, SoftwareVendor == ""microsoft"" and VulnerabilitySeverityLevel == ""Medium""),
+    ['Low Severity Vulnerabilities']=make_set_if(CveId, SoftwareVendor == ""microsoft"" and VulnerabilitySeverityLevel == ""Low"")
+    by DeviceName
+| sort by array_length(['Critical Severity Vulnerabilities']) desc"
+sample_0056,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-ASRLsassAudit.kql,DeviceEvents,Summarize which processes are triggering Lsass credential theft audit alerts in your attack surface reduction rules,"DeviceEvents
+| where TimeGenerated > ago (7d)
+| where ActionType == ""AsrLsassCredentialTheftAudited""
+| extend isAudit = tostring(AdditionalFields.IsAudit)
+| where isAudit = true
+| summarize LsassAudit=make_set(DeviceName) by InitiatingProcessCommandLine
+| extend ['Count of Devices']=array_length(LsassAudit)
+| sort by ['Count of Devices'] desc"
+sample_0058,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-DetectLocalAdminsWhoHaventElevated.kql,DeviceProcessEvents,"Searches for local admin log on events and then on process events that require full token elevation, query returns users who have logged on as an admin but not required admin access for 30 days","DeviceProcessEvents
+| project
+    TimeGenerated,
+    DeviceName,
+    AccountName,
+    FileName,
+    InitiatingProcessFileName,"
+sample_0063,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-DetectCredentialBackup.kql,DeviceEvents,Detect when a backup is taken from Windows Credential manager,"DeviceEvents
+| where ActionType == ""CredentialsBackup""
+| project
+    TimeGenerated,
+    DeviceName,
+    InitiatingProcessAccountName,
+    InitiatingProcessCommandLine,
+    InitiatingProcessFileName,"
+sample_0065,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-DetectCredentialBackup.kql,DeviceEvents,Detect when a backup is taken from Windows Credential manager,"DeviceEvents
+| where ActionType == ""CredentialsBackup""
+| project
+    Timestamp,
+    DeviceName,
+    InitiatingProcessAccountName,
+    InitiatingProcessCommandLine,
+    InitiatingProcessFileName,"
+sample_0072,DEFENDER_OK,Sentinel-Queries/Defender for Cloud Apps/DCA-PivotTableAdminActions.kql,IdentityInfo,"Create a pivot table of all actions in Defender for Cloud Apps by your privileged users over the last 7 days
+Lookup the IdentityInfo table for any users holding a privileged role","IdentityInfo
+    | where TimeGenerated > ago(21d)
+    | summarize arg_max(TimeGenerated, *) by AccountUPN
+    | where AssignedRoles has_any (""Global Administrator"", ""Security Administrator"", ""SharePoint Administrator"")
+    | distinct AccountUPN;"
+sample_0075,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-SummarizeRDPConnections.kql,DeviceNetworkEvents,"Summarize your devices by their RDP activity. The data is sorted to show total outbound RDP connections, a count of distinct RDP connections and the list of IP's connected to.","DeviceNetworkEvents
+| where TimeGenerated > ago(30d)
+| where ActionType == ""ConnectionSuccess""
+| where RemotePort == ""3389""
+| where InitiatingProcessCommandLine <> ""\""Microsoft.Tri.Sensor.exe\""""
+| summarize
+    ['RDP Outbound Connection Count']=count(),
+    ['RDP Distinct Outbound Endpoint Count']=dcount(RemoteIP),
+    ['RDP Outbound Endpoints']=make_set(RemoteIP)
+    by DeviceName
+| sort by ['RDP Distinct Outbound Endpoint Count'] desc"
+sample_0077,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-DetectRegistryTampering.kql,DeviceEvents,Detect when a user or process attempts to tamper with Defender for Endpoint registry settings,"DeviceEvents
+| where ActionType == ""TamperingAttempt""
+| extend OriginalRegistryValue = tostring(AdditionalFields.OriginalValue)
+| extend Status = tostring(AdditionalFields.Status)
+| extend TamperingAction = tostring(AdditionalFields.TamperingAction)
+| extend AttemptedRegistryValue = tostring(AdditionalFields.TamperingAttemptedValue)
+| extend TargetRegistryKey = tostring(AdditionalFields.Target)
+| where TamperingAction == ""RegistryModification""
+| project
+    TimeGenerated,
+    DeviceName,
+    TamperingAction,
+    Status,
+    OriginalRegistryValue,
+    AttemptedRegistryValue,
+    TargetRegistryKey,
+    InitiatingProcessAccountName,"
+sample_0079,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-VisualizePort22Proccesses.kql,DeviceNetworkEvents,Summarize and visualize the different parent filenames initiating TCP port 22 connections,"DeviceNetworkEvents
+| where TimeGenerated > ago(30d)
+| where ActionType == ""ConnectionSuccess""
+| where RemotePort == 22
+| where isnotempty(InitiatingProcessFileName)
+| summarize Count=count() by InitiatingProcessFileName
+| top 20 by Count
+| render barchart with (title=""Proccesses initiating TCP port 22 connections"")"
+sample_0081,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-ASRSummary.kql,DeviceEvents,"Provides a summary of Attack Surface Reduction rules, which ASR rules are being hit and by which processes","DeviceEvents
+| where TimeGenerated > ago(30d)
+| where ActionType startswith ""Asr""
+| where isnotempty(InitiatingProcessCommandLine)
+| summarize ['ASR Hit Count']=count()by ActionType, InitiatingProcessCommandLine
+| sort by ['ASR Hit Count'] desc"
+sample_0083,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-FindDeviceswithnoASR.kql,DeviceInfo,"Find devices in your environment that have never triggered an ASR rule, you can likely turn on ASR for these devices without causing issues for the users.","DeviceInfo
+| where Timestamp > ago (30d)
+| where OSPlatform startswith ""Windows""
+| summarize arg_max(Timestamp, *) by DeviceName
+| where DeviceName  !in (asrdevices)
+| project
+    ['Time Last Seen']=Timestamp,
+    DeviceId,
+    DeviceName,
+    OSPlatform,
+    OSVersion,"
+sample_0085,DEFENDER_OK,Sentinel-Queries/Defender for Identity/IdentityDirectoryEvents-EncryptionChange.kql,IdentityDirectoryEvents,Detect when the encryption types on a device are changed and parse the previous and current encryption types.,"IdentityDirectoryEvents
+| where ActionType == ""Account Supported Encryption Types changed""
+| parse AdditionalFields with * 'FROM AccountSupportedEncryptionTypes"":""' PreviousEncryption '""' *
+| parse AdditionalFields with * 'TO AccountSupportedEncryptionTypes"":""' CurrentEncryption '""' *
+| project TimeGenerated, TargetDeviceName, PreviousEncryption, CurrentEncryption"
+sample_0086,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-FindUsersWhoClickedonPhishing.kql,DeviceEvents,Find which users clicked on a phishing link after it was detected by Defender for Office 365,"DeviceEvents
+    | project TimeGenerated, ActionType, DeviceName, InitiatingProcessAccountName, RemoteUrl
+    | where ActionType == ""BrowserLaunchedToOpenUrl""
+    | where RemoteUrl startswith ""http"")
+    on $left.MaliciousURL == $right.RemoteUrl
+| project-rename URLOpenTime=TimeGenerated
+| extend TimeDelta = abs(URLOpenTime - PhishTime)
+| project PhishTime, URLOpenTime, TimeDelta, ActionType, RemoteUrl, DeviceName, InitiatingProcessAccountName"
+sample_0087,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-VisualizeRDPClients.kql,DeviceNetworkEvents,"Visualize the different RDP clients, such as rMemoteNG or RoyalTS being used in your environment","DeviceNetworkEvents
+| where Timestamp > ago(7d)
+| where ActionType == ""ConnectionSuccess""
+| where RemotePort == ""3389""
+| where InitiatingProcessFileName != ""Microsoft.Tri.Sensor.exe""
+| summarize ['RDP Client Count']=count()by InitiatingProcessFileName
+| where isnotempty(InitiatingProcessFileName)
+| sort by ['RDP Client Count'] desc
+| render barchart"
+sample_0088,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-FindDevicesMostASR.kql,DeviceEvents,Summarize the machines in your environment that are triggering the most total ASR and distinct ASR rule events,"DeviceEvents
+| where TimeGenerated > ago (30d)
+| where ActionType startswith ""Asr""
+| summarize
+    ['Total ASR hit count']=count(),
+    ['Distinct ASR rules count']=dcount(ActionType),
+    ['List of ASR rules triggered']=make_set(ActionType),
+    ['List of processess triggering ASR']=make_set(InitiatingProcessCommandLine)
+    by DeviceName
+| sort by ['Total ASR hit count'] desc"
+sample_0089,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-SummarizeSmartScreenUntrustedFiles.kql,DeviceEvents,Summarize the most common files in your environment flagging Smartscreen untrusted warnings,"DeviceEvents
+| where Timestamp > ago(30d)
+| where ActionType startswith ""SmartScreen""
+| where AdditionalFields == @""{""""Experience"""":""""Untrusted""""}""
+| summarize Count=count()by FileName
+| sort by Count"
+sample_0091,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-SummarizeMacroUsage.kql,DeviceFileEvents,"Summarize macro usage on your devies by creating a list all macros used, a count of how many users are using each one and the account names","union DeviceFileEvents, DeviceNetworkEvents
+| where TimeGenerated > ago(30d)
+| project InitiatingProcessCommandLine, InitiatingProcessAccountName
+| where InitiatingProcessCommandLine startswith '""EXCEL.EXE'
+| where InitiatingProcessCommandLine endswith '.xltm""' or InitiatingProcessCommandLine endswith '.xlsm""'
+| distinct InitiatingProcessCommandLine, InitiatingProcessAccountName
+| parse-where InitiatingProcessCommandLine with * '""EXCEL.EXE"" ""' ['Macro Filename'] '""' *
+| summarize ['List of Users']=make_set(InitiatingProcessAccountName), ['Count of Users']=dcount(InitiatingProcessAccountName) by ['Macro Filename']
+| sort by ['Count of Users'] desc
+
+
+
+union DeviceFileEvents, DeviceNetworkEvents
+| where Timestamp > ago(30d)
+| project InitiatingProcessCommandLine, InitiatingProcessAccountName
+| where InitiatingProcessCommandLine startswith '""EXCEL.EXE'
+| where InitiatingProcessCommandLine endswith '.xltm""' or InitiatingProcessCommandLine endswith '.xlsm""'
+| distinct InitiatingProcessCommandLine, InitiatingProcessAccountName
+| parse-where InitiatingProcessCommandLine with * '""EXCEL.EXE"" ""' ['Macro Filename'] '""' *
+| summarize ['List of Users']=make_set(InitiatingProcessAccountName), ['Count of Users']=dcount(InitiatingProcessAccountName) by ['Macro Filename']
+| sort by ['Count of Users'] desc"
+sample_0093,DEFENDER_OK,Sentinel-Queries/Defender for Cloud Apps/DCA-DetectMailboxForward.kql,CloudAppEvents,Use the Defender for Cloud Apps logs to detect when a mail forward is created on a mailbox (not an individual mailbox rule). Retrieve the address the mail was forwarded to and whether is both stored and forwarded,"CloudAppEvents
+| where ActionType == ""Set-Mailbox""
+| extend UserId = tostring(RawEventData.UserId)
+| extend ForwardingSetting = tostring(parse_json(tostring(RawEventData.Parameters))[1].Name)
+| extend ForwardingAddress = tostring(parse_json(tostring(RawEventData.Parameters))[1].Value)
+| extend StoreandForward = tostring(parse_json(tostring(RawEventData.Parameters))[2].Name)
+| extend ['Email Stored and Forwarded'] = tostring(parse_json(tostring(RawEventData.Parameters))[2].Value)
+| where ForwardingSetting == ""ForwardingSmtpAddress"" and isnotempty(ForwardingAddress)
+| extend ['Forwarding Email Address']=split(ForwardingAddress, "":"")[-1]
+| project-away ForwardingSetting, StoreandForward
+| project
+    TimeGenerated,
+    UserId,
+    IPAddress,
+    ['Forwarding Email Address'],
+    ['Email Stored and Forwarded']"
+sample_0095,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Firewall Queries/Devices-NoRDP.kql,DeviceNetworkEvents,Find devices that have had no inbound RDP connections in the last 30 days to help build firewall policy,"DeviceNetworkEvents
+| where TimeGenerated > ago (30d)
+| where ActionType == ""InboundConnectionAccepted""
+| where LocalPort == 3389
+| distinct DeviceId;"
+sample_0096,DEFENDER_OK,Sentinel-Queries/Defender for Cloud Apps/DCA-FindUserSubmittedPhishingSpam.kql,CloudAppEvents,Find emails that have been reported by your users as spam/phishing that have been rescanned and found to be genuine spam or phishing,"CloudAppEvents
+| where ActionType == ""UserSubmission""
+| extend UserId = tostring(RawEventData.UserId)
+| extend RescanVerdict = tostring(parse_json(tostring(RawEventData.RescanResult)).RescanVerdict)
+| extend RescanTimeTimestamp = tostring(parse_json(tostring(RawEventData.RescanResult)).Timestamp)
+| extend Subject = tostring(RawEventData.Subject)
+| extend P1Sender = tostring(RawEventData.P1Sender)
+| extend P2Sender = tostring(RawEventData.P2Sender)
+| where RescanVerdict != ""NotSpam""
+| project
+    TimeGenerated,
+    UserId,
+    P1Sender,
+    P2Sender,
+    Subject,
+    RescanVerdict,"
+sample_0100,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-SummarizeSSHPortOpenedInbound.kql,DeviceNetworkEvents,Find any devices enrolled into Defender that have created an inbound listening connection on port 22 and retrieve the process command line that opened the connection,"DeviceNetworkEvents
+| where TimeGenerated > ago(7d)
+| where ActionType == ""ListeningConnectionCreated""
+| where LocalPort == 22
+| summarize
+    ['Total count of listening connections opened']=count(),
+    ['List of processes creating listening connections']=make_set(InitiatingProcessCommandLine)
+    by DeviceName
+| sort by ['Total count of listening connections opened'] desc"
+sample_0101,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-msdtPotentialExploit.kql,DeviceNetworkEvents,"Detections based on the emerging information found here - https://twitter.com/nao_sec/status/1530196847679401984, https://twitter.com/GossiTheDog/status/1531018365606707206 and https://doublepulsar.com/follina-a-microsoft-office-code-execution-vulnerability-1a47fce5629e
+Microsoft Sentinel queries
+Search your device process events for msdt.exe being generated by Outlook, Word or Excel - should be low noise and high value alerts, seems very rare behaviour","DeviceNetworkEvents
+    | where Timestamp > ago(30d) and Timestamp < ago(1d)
+    | where InitiatingProcessFileName has_any (""sdiagnhost.exe"", ""msdt.exe"")
+    | where RemoteIPType == ""Public""
+    | distinct RemoteIP;"
+sample_0102,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-InterestingPortsOpened.kql,DeviceNetworkEvents,"Use the DeviceNetworkEvents to find what listening ports are being opened on a device and then query that list
+You can look for SSH, DNS etc being run from your end user devices","DeviceNetworkEvents
+| where Timestamp > ago(7d)
+| where ActionType == ""ListeningConnectionCreated""
+| where LocalPort < 1025
+| summarize ['Ports Opened']=make_set(LocalPort), ['Count of Ports Opened']=dcount(LocalPort) by DeviceName
+| where ['Ports Opened'] has_any (""21"",""22"",""53"")"
+sample_0104,DEFENDER_OK,Sentinel-Queries/Defender for Cloud Apps/DCA-FormPhishingStatusChanged.kql,CloudAppEvents,"Alert when the phishing status of a Microsoft Form is changed, this could be a sign one of your accounts has been compromised and being used to host malicious Forms","CloudAppEvents
+| where TimeGenerated > ago (7d)
+| extend Operation = tostring(RawEventData.Operation)
+| where Operation == ""UpdatePhishingStatus""
+| extend UserId = tostring(RawEventData.UserId)
+| extend Workload = tostring(RawEventData.Workload)
+| extend FormStatus = tostring(parse_json(tostring(RawEventData.ActivityParameters)).FormPhishingStatus)
+| extend FormId = tostring(RawEventData.FormId)
+| extend FormName = tostring(RawEventData.FormName)
+| where FormStatus == ""Auto Blocked""
+| project TimeGenerated, Operation, UserId, FormStatus, FormName, FormId"
+sample_0106,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Firewall Queries/Devices-NoSSH.kql,DeviceInfo,Find devices that have had no inbound SSH connections in the last 30 days to help build firewall policy,"DeviceInfo
+| where TimeGenerated > ago (30d)
+| distinct DeviceId, DeviceName
+| where DeviceId !in (devices)"
+sample_0107,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Firewall Queries/Devices-NoSSH.kql,DeviceNetworkEvents,Find devices that have had no inbound SSH connections in the last 30 days to help build firewall policy,"DeviceNetworkEvents
+| where TimeGenerated > ago (30d)
+| where ActionType == ""InboundConnectionAccepted""
+| where LocalPort == 22
+| distinct DeviceId;"
+sample_0110,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-VisualizeRDPClients.kql,DeviceNetworkEvents,"Visualize the different RDP clients, such as rMemoteNG or RoyalTS being used in your environment","DeviceNetworkEvents
+| where TimeGenerated > ago(7d)
+| where ActionType == ""ConnectionSuccess""
+| where RemotePort == ""3389""
+| where InitiatingProcessFileName != ""Microsoft.Tri.Sensor.exe""
+| summarize ['RDP Client Count']=count()by InitiatingProcessFileName
+| where isnotempty(InitiatingProcessFileName)
+| sort by ['RDP Client Count'] desc
+| render barchart"
+sample_0111,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-PotentialDNSTunnelling.kql,DeviceNetworkEvents,Identifies potential DNS tunnelling over HTTPS,"DeviceNetworkEvents
+| where ActionType == ""NetworkSignatureInspected""
+| extend AF = parse_json(AdditionalFields)
+| extend NetworkSignature = AF.SignatureName
+| where NetworkSignature == ""DNS_Request"" and RemotePort !in (""53"", ""137"", ""5353"", ""5355"")
+| where not(ipv4_is_private(RemoteIP))
+| project
+    TimeGenerated,
+    DeviceName,
+    NetworkSignature,
+    LocalIP,
+    LocalPort,
+    RemoteIP,
+    RemotePort,"
+sample_0112,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-VisualizeMostCommonISOFiles.kql,DeviceFileEvents,Visualize the most common ISO files being mounted on your devices,"DeviceFileEvents
+| where TimeGenerated > ago(30d)
+| where ActionType == ""FileCreated""
+| where FileName endswith ""iso.lnk""
+| extend ['ISO FileName'] = trim(@"".lnk"",FileName)
+| summarize Count=count() by ['ISO FileName']
+| top 20 by Count
+| render barchart with (title=""Most common ISO files being mounted"")"
+sample_0113,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-SummarizeLDAPandLDAPStraffic.kql,DeviceNetworkEvents,"Create a summary of the devices with inbound LDAP and LDAPS connections, sorted by the devices with the most inbound LDAP","DeviceNetworkEvents
+| where ActionType == ""InboundConnectionAccepted""
+| where LocalPort in (""389"", ""636"", ""3269"")
+| summarize
+    ['Count of Inbound LDAP Connections']=countif(LocalPort == 389),
+    ['Count of Distinct Inbound LDAP Connections']=dcountif(RemoteIP, LocalPort == 389),
+    ['List of Inbound LDAP Connections']=make_set_if(RemoteIP, LocalPort == 389),
+    ['Count of Inbound LDAPS Connections']=countif(LocalPort in (""636"", ""3269"")),
+    ['Count of Distinct Inbound LDAPS Connections']=dcountif(RemoteIP, LocalPort in (""636"", ""3269"")),
+    ['List of Inbound LDAPS Connections']=make_set_if(RemoteIP, LocalPort in (""636"", ""3269""))
+    by DeviceName
+| sort by ['Count of Distinct Inbound LDAP Connections'] desc"
+sample_0114,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-CreateSetofLocalAdminsperDevice.kql,DeviceInfo,Searches device info table for non server operating systems then return any users who have logged on interactively as an admin as a set per device. Can add exclusions for known IT admin accounts,"DeviceInfo
+    | where TimeGenerated > ago(30d)
+    | where OSPlatform !contains ""Server""
+    | summarize arg_max(TimeGenerated, *) by DeviceName
+    | project DeviceName;"
+sample_0119,DEFENDER_OK,Sentinel-Queries/Defender for Cloud Apps/DCA-FindNewEvents.kql,CloudAppEvents,Find new events in Defender for Cloud Apps seen in the last week vs the previously 90 days,"CloudAppEvents
+| where Timestamp > ago(3d)
+| extend Operation = tostring(RawEventData.Operation)
+| extend UserId = tostring(RawEventData.UserId)
+| extend Workload = tostring(RawEventData.Workload)
+| extend Activity = strcat(Workload, "" - "", Operation)
+| where Activity !in (knownactivities)
+| summarize ['First Time Seen']=min(Timestamp), Count=count() by Activity
+| sort by Count desc"
+sample_0121,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-NewASREvents.kql,DeviceEvents,Retrieve any new ASR alerts in your environment over the last week not previously seen in the prior 90 days and which devices have triggered them,"DeviceEvents
+    | where TimeGenerated > ago(7d)
+    | where ActionType startswith ""Asr""
+    | where ActionType !in (existingalerts)
+| summarize ['Device List']=make_set(DeviceName) by ActionType"
+sample_0125,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-FindNetworkRecon.kql,DeviceNetworkEvents,"Find potential network recon on one of your devices by detecting when it connects to more than 10 common ports used to map your network and 10 distinct endpoints within an hour
+Use that data to then return more details on each IP that device attempted to connect to","DeviceNetworkEvents
+    | where ActionType in (""ConnectionSuccess"", ""ConnectionFailed"")
+    | where RemotePort in (""21"", ""22"", ""25"", ""53"", ""80"", ""110"", ""123"", ""139"", ""389"", ""443"", ""445"", ""636"", ""993"", ""995"", ""8080"")
+    | where RemoteIPType == ""Private""
+    | summarize
+        ['Total connection count']=count(),
+        ['Count of distinct ports']=dcount(RemotePort),
+        ['List of ports']=make_set(RemotePort),
+        ['Count of remote IPs']=dcount(RemoteIP),
+        ['List of remote IPs']=make_set(RemoteIP)
+        by DeviceName, bin(TimeGenerated, 1h)
+    | where ['Count of distinct ports'] >= 10 and ['Count of remote IPs'] >= 10
+    | distinct DeviceName;"
+sample_0126,DEFENDER_OK,Sentinel-Queries/Defender for Identity/IdentityLogonEvents-SummarizeClearTextLDAP.kql,IdentityLogonEvents,Summarize the accounts in your environment using cleartext LDAP connections,"IdentityLogonEvents
+| where TimeGenerated > ago (30d)
+| where LogonType == ""LDAP cleartext""
+| summarize
+    ['Total connection count']=count(),
+    ['Distinct destination device count']=dcount(DestinationDeviceName),
+    ['List of destination devices']=make_set(DestinationDeviceName)
+    by AccountUpn
+| sort by ['Distinct destination device count'] desc"
+sample_0128,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-DetectLocalUserCreated.kql,DeviceEvents,Detect when a local user account is created on an endpoint,"DeviceEvents
+| where Timestamp > ago(7d)
+| where ActionType == ""UserAccountCreated""
+| where AccountName != ""defaultuser1""
+| project
+    Timestamp,
+    DeviceName,
+    ['Account Created Name']=AccountName,
+    Actor=InitiatingProcessAccountName"
+sample_0129,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-msdtPotentialExploit.kql,DeviceNetworkEvents,"Detections based on the emerging information found here - https://twitter.com/nao_sec/status/1530196847679401984, https://twitter.com/GossiTheDog/status/1531018365606707206 and https://doublepulsar.com/follina-a-microsoft-office-code-execution-vulnerability-1a47fce5629e
+Microsoft Sentinel queries
+Search your device process events for msdt.exe being generated by Outlook, Word or Excel - should be low noise and high value alerts, seems very rare behaviour","DeviceNetworkEvents
+| where Timestamp > ago(1d)
+| where InitiatingProcessFileName has_any (""sdiagnhost.exe"", ""msdt.exe"")
+| where RemoteIPType == ""Public""
+| where RemoteIP !in (knownips)
+| where RemoteUrl !endswith "".visualstudio.com"" and RemoteUrl !endswith "".microsoft.com""
+| project
+    Timestamp,
+    ActionType,
+    DeviceName,
+    InitiatingProcessAccountName,
+    InitiatingProcessFileName,
+    InitiatingProcessCommandLine,
+    LocalIP,
+    RemoteIP,
+    RemotePort,"
+sample_0130,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Firewall Queries/Devices-NoHTTP.kql,DeviceNetworkEvents,Find devices that have had no inbound web connections in the last 30 days to help build firewall policy,"DeviceNetworkEvents
+| where Timestamp > ago (30d)
+| where ActionType == ""InboundConnectionAccepted""
+| where LocalPort in (""80"",""443"",""8080"")
+| distinct DeviceId;"
+sample_0132,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-ASROfficeChildProcessAudit.kql,DeviceEvents,"Detects when you have audit hits on the ""Block all Office applications from creating child processes"" ASR rule.
+For instance if you want to audit the impact for the MSDT vulnerability - https://msrc-blog.microsoft.com/2022/05/30/guidance-for-cve-2022-30190-microsoft-support-diagnostic-tool-vulnerability/","DeviceEvents
+| where TimeGenerated > ago (30d)
+| where ActionType == ""AsrOfficeChildProcessAudited""
+| where AdditionalFields.IsAudit == true
+| project
+    TimeGenerated,
+    DeviceName,
+    InitiatingProcessAccountName,
+    FileName,
+    ProcessCommandLine,"
+sample_0133,DEFENDER_OK,Sentinel-Queries/Defender for Cloud Apps/DCA-DetectAdminGrantingOwnAccesstoMailbox.kql,CloudAppEvents,Detect when one of your Exchange admins grants themselves access to another users mailbox,"CloudAppEvents
+| extend Operation= tostring(RawEventData.Operation)
+| where Operation == ""Add-MailboxPermission""
+| extend TargetMailbox = tostring(parse_json(tostring(RawEventData.Parameters))[2].Value)
+| extend UserAdded = tostring(parse_json(tostring(RawEventData.Parameters))[3].Value)
+| extend AccessGranted = tostring(parse_json(tostring(RawEventData.Parameters))[4].Value)
+| extend Actor = tostring(RawEventData.UserId)
+| where Actor =~ UserAdded
+| project Timestamp, Actor, TargetMailbox, UserAdded, AccessGranted"
+sample_0134,DEFENDER_OK,Sentinel-Queries/Defender for Cloud Apps/DCA-PivotTableAdminOperations.kql,CloudAppEvents,"Defender for Cloud Apps tracks administrative actions under the 'isAdminOperation' flag. This query will build a pivot table of all admin operations completed by your users
+Works in both Sentinel and Advanced Hunting","CloudAppEvents
+| where IsAdminOperation == ""true""
+| where AccountType == ""Regular""
+| extend UserPrincipalName = tostring(RawEventData.UserId)
+| evaluate pivot(ActionType, count(), UserPrincipalName)"
+sample_0136,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Firewall Queries/Devices-NoSMB.kql,DeviceInfo,Find devices that have had no inbound SMB connections in the last 30 days to help build firewall policy,"DeviceInfo
+| where TimeGenerated > ago (30d)
+| distinct DeviceId, DeviceName
+| where DeviceId !in (devices)"
+sample_0138,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-DetectMultipleFailedRemoteLogons.kql,DeviceLogonEvents,Detect when the same IP attempts to brute force a remote connection or attempts to connect to multiple devices and fails over a short time period,"DeviceLogonEvents
+| where Timestamp > ago (1d)
+| where LogonType == ""RemoteInteractive""
+| where ActionType == ""LogonFailed""
+| summarize
+    ['Count of logon attempts']=count(),
+    ['Count of distinct devices']=dcount(DeviceName),
+    ['List of devices']=make_set(DeviceName)
+    by RemoteIP, bin(Timestamp, 1h)
+| where ['Count of distinct devices'] >= 3 or ['Count of logon attempts'] >= 10"
+sample_0139,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-Top20DepartmentsCopyingDatatoUSBbyCount.kql,DeviceInfo,Top 20 departments copying file data to USB drives by file count,"DeviceInfo
+| where TimeGenerated > ago (21d)
+| summarize arg_max(TimeGenerated, *) by DeviceName
+| extend LoggedOnUser = tostring(LoggedOnUsers[0].UserName)
+) on LoggedOnUser
+| project LoggedOnUser, AccountUPN, JobTitle, Country, DeviceName, EmployeeId, Department, AccountDisplayName;"
+sample_0140,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Firewall Queries/Devices-SummarizeInboundTraffic.kql,DeviceNetworkEvents,"Summary of inbound traffic, will find the total count, distcount count of devices and the list of inbound devices per port","DeviceNetworkEvents
+| where Timestamp > ago (30d)
+| where ActionType == ""InboundConnectionAccepted""
+| where LocalPort in (""22"",""80"",""139"",""443"",""445"",""3389"",""8080"")
+| summarize ['Total Count']=count(), ['Distinct Count of Inbound Devices']=dcount(RemoteIP), ['List of Inbound Devices']=make_set(RemoteIP) by DeviceName, LocalPort
+| sort by DeviceName asc, LocalPort asc"
+sample_0141,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-Top20RandomActions.kql,DeviceEvents,"Find the top 20 of a collection of varied data sets, no real detections in here just interesting data that is captured","DeviceEvents
+| where ActionType == ""ScreenshotTaken""
+| where InitiatingProcessAccountName != ""system""
+| summarize Count=count() by InitiatingProcessAccountName
+| top 20 by Count"
+sample_0145,DEFENDER_OK,Sentinel-Queries/Defender for Identity/IdentityLogonEvents-SummarizeNTLM.kql,IdentityLogonEvents,Summarize NTLM authentications by which source computers & accounts are connecting to the most destination devices,"IdentityLogonEvents
+
+
+| where Timestamp > ago(7d)
+| where ActionType == ""LogonSuccess""
+| where Protocol =~ ""Ntlm""
+| where LogonType == ""Credentials validation""
+| summarize ['Target Device List']=make_set(DestinationDeviceName), ['Target Device Count']=dcount(DestinationDeviceName) by DeviceName, AccountName
+| sort by ['Target Device Count'] desc"
+sample_0146,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-Top20RandomActions.kql,DeviceEvents,"Find the top 20 of a collection of varied data sets, no real detections in here just interesting data that is captured","DeviceEvents
+| where ActionType == ""ScreenshotTaken""
+| where InitiatingProcessAccountName != ""system""
+| summarize Count=count() by InitiatingProcessAccountName
+| top 20 by Count"
+sample_0147,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-PublicPort22Allowed.kql,DeviceNetworkEvents,Find successful connections from a private to public network on TCP port 22,"DeviceNetworkEvents
+| where Timestamp > ago(1d)
+| where ActionType == ""ConnectionSuccess""
+| where RemotePort == 22
+| where LocalIPType == ""Private""
+| where RemoteIPType == ""Public""
+| project
+    Timestamp,
+    DeviceName,
+    InitiatingProcessAccountName,
+    InitiatingProcessCommandLine,
+    LocalIP,
+    RemoteIP,"
+sample_0149,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-FindNewEvents.kql,DeviceEvents,Find any new DeviceEvents found in your environment over the last week compared to the last 6 months,"DeviceEvents
+    | where TimeGenerated > ago (180d) and TimeGenerated < ago(7d)
+    | distinct ActionType;"
+sample_0150,DEFENDER_OK,Sentinel-Queries/Defender for Endpoint/Device-msdtPotentialExploit.kql,DeviceProcessEvents,"Detections based on the emerging information found here - https://twitter.com/nao_sec/status/1530196847679401984, https://twitter.com/GossiTheDog/status/1531018365606707206 and https://doublepulsar.com/follina-a-microsoft-office-code-execution-vulnerability-1a47fce5629e
+Microsoft Sentinel queries
+Search your device process events for msdt.exe being generated by Outlook, Word or Excel - should be low noise and high value alerts, seems very rare behaviour","DeviceProcessEvents
+| where ProcessCommandLine contains ""msdt.exe"" and InitiatingProcessCommandLine has_any (""outlook.exe"", ""winword.exe"", ""excel.exe"")"

@@ -1,0 +1,108 @@
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{amsmath,amstext}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{siunitx}
+\usepackage{listings}
+\lstset{breaklines=true}
+\usepackage{ragged2e}
+\usepackage{wrapfig}
+\usepackage{textcomp}
+\usepackage{makecell}
+\usepackage{subcaption} 
+\usepackage{rotating}
+\usepackage{algorithm2e}
+\usepackage{fancyvrb}
+\usepackage[most]{tcolorbox}
+\usepackage{xspace}
+\usepackage{xstring}
+\usepackage{enumitem}
+\usepackage{balance} 
+
+
+\AtBeginDocument{%
+  \hypersetup{colorlinks=true, citecolor=blue, linkcolor=blue, urlcolor=blue}%
+  \urlstyle{sf}%
+}
+
+%%%%%%%%%%%%%%%%%%%%%%% END of Packages %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\definecolor{bblue}{HTML}{4F81BD}
+\definecolor{rred}{HTML}{C0504D}
+\definecolor{ggreen}{HTML}{9BBB59}
+\definecolor{ppurple}{HTML}{9F4C7C}
+\definecolor{darkgray}{rgb}{0.66,0.66,0.66}
+\definecolor{gray}{RGB}{136,136,136}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\definecolor{comment-red}{rgb}{0.8,0,0}
+
+%%% TABLE STUFF %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\Norothead}[2][0]{\makebox[9mm][c]{\rotatebox{#1}{\makecell[c]{#2}}}}
+\newlength\tbspace
+\setlength\tbspace{3mm}
+\newcolumntype{C}{c<{\hspace{\tbspace}}}
+
+% use \num{123456} -> 123,456
+\sisetup{group-separator={,}, group-minimum-digits={3}, output-decimal-marker={.}}
+\newcommand\inlineeqno{\stepcounter{equation}\ (\theequation)}
+\newcommand\mycommfont[1]{\footnotesize\ttfamily{\scriptsize \texttt{#1}}}
+\SetCommentSty{mycommfont}
+\renewcommand{\rothead}[2][60]{\makebox[9mm][c]{\rotatebox{#1}{\makecell[c]{#2}}}}
+\makeatletter
+\newcommand\footnoteref[1]{\protected@xdef\@thefnmark{\ref{#1}}\@footnotemark}
+\makeatother
+\newcommand{\DefMacro}[2]{\expandafter\newcommand\csname rmk-#1\endcsname{#2}}
+\newcommand{\UseMacro}[1]{\csname rmk-#1\endcsname}
+\newcommand{\Caption}[1]{\caption{#1}}
+\newcommand{\CodeIn}[1]{{\small \texttt{#1}}}
+\newcommand{\Space}[1]{}
+\newcommand{\NA}{-}
+\newcommand{\Fix}[1]{\textcolor{red}{#1}}
+\newcommand{\Bullet}{$\star$}
+\providecommand{\pgwrapper}[2]{\textcolor{comment-red}{[#1: #2]}}
+\providecommand{\cc}[1]{\texttt{#1}}
+
+\newcommand{\TODO}[1]{\pgwrapper{TODO}{#1}}
+\makeatletter
+\newcommand{\labitem}[2]{%
+  \def\@itemlabel{\textbf{#1}}%
+  \item
+  \def\@currentlabel{#1}\label{#2}}
+\makeatother
+
+\newcommand{\RN}[1]{\textup{\uppercase\expandafter{\romannumeral#1}}}
+\SetKwProg{Fn}{Function}{}{}
+\newcommand{\shl}{\ \cc{<}\cc{<}\ }
+\newcommand{\shr}{\ \cc{>}\cc{>}\ }
+\newcommand{\x}{$\times$\xspace}
+\newcommand{\PP}[1]{%
+  \vspace{2px}%
+  \noindent{\bf \IfEndWith{#1}{.}{#1}{#1.}}%
+}
+\newcommand{\para}[1]{\smallskip\noindent\emph{#1}\quad}
+
+\newcommand{\heading}[1]{\vspace{2pt}\noindent{\underline{\textsc{#1}}}}
+
+%%%%%%%%%%%%%%%% Macros for frequent words  %%%%%%%%%%%%%%%%
+\newcommand{\V}{\checkmark}
+\newcommand{\X}{{\footnotesize $\times$}\xspace}
+\renewcommand{\O}{\phantom{0}}
+\newcommand{\etal}{\textit{et al}.\xspace}
+\newcommand{\ie}{\textit{i}.\textit{e}.}
+\newcommand{\eg}{\textit{e}.\textit{g}.}
+\providecommand{\URL}{\url}
+
+%%%%%%%%%%%%%%%% Custom macros for this paper  %%%%%%%%%%%%%%%%
+\newcommand{\wajih}[1]{\textcolor{red}{Wajih: #1}}
+\newcommand{\Sys}{XXX\xspace}
+\newcommand{\Cost}{XXX\%\xspace}
+\newcommand{\gnn}{Graph Neural Network\xspace}
+\newcommand{\provenance}{provenance\xspace}
+\newcommand{\fscore}{F-Score\xspace}
+\newcommand{\optc}{OpTC\xspace}
+\newcommand{\unicorn}{UNICORN\xspace}
+\newcommand{\streamspot}{StreamSpot\xspace}

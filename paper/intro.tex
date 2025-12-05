@@ -1,0 +1,108 @@
+\section{Introduction}
+\label{s:intro}
+
+% \Fix{You use “Schema Refiner,” “Schema Refinement,” sometimes for the same stage.}
+% NOTE: Changed "Schema Refinement" to "Schema Context"
+
+% renamed oracle-based pair to oracle refinement 
+
+% \Fix{Reduce the caption length of Figure 2.}
+
+% \Fix{Move Alternate Prompting Methods Box to the Appendix. Create a new section in Appendix and put it there. Clearly use REF in the text to the Appendix section where you moved it.}
+
+% \Fix{Always use !t instead of H in the table.}
+
+% \Fix{Earlier: “Gemini 2.5 Flash” used to recreate NL2KQL (Methods / NL2KQL recreation, cost table). Elsewhere: teacher/oracle stated as “Gemini 2.0 Flash”}
+% \Fix{Early you say “three instances of Gemma-3-4B-IT,” later the Multi-Agent section says “a single instance” via LangChain.
+% Fix: Pick one design. Use the work 2-Staged Mult-Agent architecture}
+% \Fix{Examples: “capabilties,” “non-negligible” misspelled as “non-neeligible,” duplicated words (“the the”), tense shifts, and awkward phrasing (“we assess how well do fine-tuned SLMs…,” “we also attempt additional prompting strategies that supply helpful tips to the model”).}
+% \Fix{Multiple places re-explain NL2KQL components and the pipeline instead of referencing the earlier subsection; the same schema/few-shot narrative appears more than once.}
+% \Fix{You describe recreating NL2KQL with “two open source LLMs: Google Gemini 2.5 Flash and Microsoft Phi-4.”
+% Why it matters: Gemini 2.x Flash is not open source.}
+% \Fix{Figure 2 + Contributions: three parallel Gemma-3-4B-IT generators with an oracle.
+% Multi-Agent text: “query a single instance of Gemma-3-4B-IT via LangChain.”
+% RQ7 ablation text: concludes “the best number of SLMs … is one.”}
+% \Fix{Distillation section: teacher that generates 1,000 NLQ-KQL pairs is Gemini 2.0 Flash.
+% Elsewhere: the oracle for refinement and the teacher for distillation get interchanged with “Gemini 2.5 Flash” mentions.}
+% \Fix{You say you “recreated the NL2KQL pipeline,” but then swap in different oracle models, a different embedding model, and different inference endpoints. Call this a re-implementation with substitutions}
+
+
+% Basic Intro:
+% \wajih{It is not clear how KQL solves the alert fatigue problem. I think KQL is just for understanding logs and finding threats.}
+
+% \wajih{Inconsistent Terminologies in the FULL paper. Please fix them by searching throughout the paper and pick one: 6) we eliminate the Query Refiner and replace it with an Oracle, but then state the Oracle “acts as a query refiner.”. 7)  }
+% 1) “NLQs” vs “NQLs”
+% 2) “multi-agent” vs “two-staged architecture” vs Multi-Agent vs Multi-SLM vs“Two-Staged Multi-Agent”.
+% 3) “two-stage” vs “two-staged”
+% 4) “Zero-Shot,” “zero-shot,” and sometimes “zero shot.”
+% 5) The system diagrams use “Oracle Refinement,” while text refers to an “Oracle selector and refiner,” and NL2KQL uses “Query Refiner.”.
+
+
+
+% \Fix{We need to add more details below. Maybe introduce different prompting techniques a little more. Give some context why you introduced certain technique, what are their limitations of that technique. Currently it looks super thin. You need to have atleast three paragraphs for methodology section. Currenlty you have one paragraph.}
+
+
+% \Fix{ADD TWO PARAGRAPHS HERE EXPLAINING YOUR METHODOLOGY IN MORE DETAILS}
+
+% Similar to \cite{Belcak_Heinrich_Diao_Fu_Dong_Muralidharan_Lin_Molchanov}, we argue that SLMs provide a variety of benefits, including lower latency, memory, computational, and operational costs.
+% These benefits can be leveraged to produce results that are relatively similar in accuracy to LLMs. In this paper, we seek to leverage the lightweight and
+% strong inference capabilities of both SLMs and LLMs respectively in order to produce a heterogeneous multi-agent workflow that can produce syntactically and
+% semantically correct KQL queries while minimizing costs drastically. First, we assess how well fine-tuned SLMs perform in generating KQL queries. Second, we introduce a
+% multi-agent workflow that leverages an instance of Gemma-3-4B-IT to produce KQL queries, and an Oracle LLM, Gemini 2.0 Flash, to refine the KQL queries to ensure that they
+% are syntactically and semantically correct.
+
+% \wajih{We don't need to enumerate this. Just put them in the paragraph.}
+
+% \Fix{Rahul, reframe the results like we discussed in the meeting. The following paragraph should only discuss evaluation section. No methodology. Move methodology above.}
+
+
+The evolving cybersecurity landscape has increased attack complexity and reshaped how analysts mitigate threats. In Security Operations Centers (SOCs), analysts face overwhelming volumes of event logs, network traffic, and threat intelligence feeds \cite{Bargan_2024}, receiving on average 5,000 alerts per day via SIEM systems and up to 100,000 in extreme cases \cite{Alahmadi}. To investigate these massive logs, they rely on query languages such as Sigma, Elastic EQL, and KQL \cite{SigmaHQ, Elastic_Query_Language_Documentation, Kusto-Query-Language}, but translating natural-language intent into correct queries over large, evolving schemas remains a major bottleneck.
+
+KQL, introduced by Microsoft in 2017 \cite{KQL_Background}, is the most widely adopted. Integrated into Microsoft Sentinel and Defender, it is a domain-specific, read-only language that lets analysts parse millions of log rows efficiently and extract relevant events. However, its expressiveness and non-trivial semantics make authoring accurate queries challenging for non-experts, especially during time-sensitive investigations.
+
+In the era of LLMs, automated KQL generation can further accelerate investigations by producing precise queries aligned with an analyst's intent. Beyond code generation, LLMs have been applied across cybersecurity tasks, such as log analysis and penetration testing \cite{PentestGPT, VulDetect}. They have also been exploited for offensive purposes, including phishing and ransomware planning \cite{Hassanin_Moustafa_2024}, while models like GPT-3.5 and GPT-4 show strong defensive potential in areas such as scam detection \cite{Jiang_2024}. However, LLM-centric pipelines for NLQ-to-KQL translation can be costly, latency-sensitive, and difficult to deploy under enterprise data-governance constraints.
+
+\begin{figure}[!t]
+\centering
+\begin{minipage}{0.95\linewidth}
+\begin{lstlisting}[language=SQL,
+    basicstyle=\ttfamily\scriptsize,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{gray}\itshape,
+    stringstyle=\color{teal},
+    showstringspaces=false,
+    frame=single,
+    caption={Example KQL query that retrieves device IDs which last connected from IP address 89.12.55.1 within the last 7 days. The query references multiple columns in the \texttt{DeviceNetworkEvents} table schema, including \texttt{Timestamp}.},
+    captionpos=b,
+    label={fig:kql-example}]
+DeviceNetworkEvents
+| where Timestamp >= ago(7d)
+| where ActionType == 'ConnectionSuccess'
+| summarize arg_max(Timestamp, LocalIP) by DeviceId
+| where LocalIP == "89.12.55.1"
+| project DeviceId
+\end{lstlisting}
+\end{minipage}
+\vspace{-3ex}
+\end{figure}
+
+Unfortunately, LLMs also incur drawbacks, including higher latency, memory demands, and operational costs. Moreover, depending on the use case, they may be unsuitable for certain tasks \cite{Belcak_Heinrich_Diao_Fu_Dong_Muralidharan_Lin_Molchanov}. As an alternative, we introduce SLMs, defined following \cite{Belcak_Heinrich_Diao_Fu_Dong_Muralidharan_Lin_Molchanov} as language models that (i) can run on common consumer devices with practical inference latency, (ii) are not LLMs, and (iii) have at most 10 billion parameters. SLMs offer lower latency, memory, computational, and operational costs while still achieving accuracy comparable to LLMs in some domain-specific tasks \cite{Belcak_Heinrich_Diao_Fu_Dong_Muralidharan_Lin_Molchanov}. Despite this promise, there has been no systematic study of SLMs for NLQ-to-KQL translation in realistic, schema-rich settings.
+
+
+This work fills that gap through three orthogonal enhancement knobs (prompting, fine-tuning, and two-staged architecture design) and a comprehensive empirical study. We provide the first systematic evaluation of SLMs for NLQ-to-KQL translation across multiple accuracy metrics, latency, and cost, establishing clear baselines against representative LLMs. We adapt the NL2KQL architecture for SLMs by replacing heavy components with lightweight alternatives while preserving the prompting, retrieval, and refinement structure so that results are both comparable and cost efficient. We also introduce error-aware prompting based on common KQL parser failures, which improves syntactic and semantic correctness without increasing token count.
+
+We further explore LoRA fine-tuning~\cite{LoRA} with rationale distillation to transfer reasoning from a teacher LLM into an SLM. LoRA trains only low-rank adapter parameters while freezing the original model weights, enabling efficient fine-tuning on NLQ-KQL pairs. To embed reasoning capabilities, each training example is augmented with a short chain-of-thought explanation produced by the teacher model, followed by the target KQL. This rationale-augmented setup allows the SLM to learn intermediate reasoning steps in addition to final outputs, strengthening its ability to handle structured code generation tasks without increasing model size.
+
+Beyond prompting and fine-tuning, our core contribution is a two-stage SLM-Oracle architecture for KQL generation. The first stage uses an SLM to efficiently generate candidate queries, while the second employs a lightweight LLM as an Oracle to validate, refine, and select the best output using schema information and parsing feedback. This division of labor lets the SLM focus on fast generation and the Oracle on correctness, creating a scalable architecture that balances efficiency and accuracy. This design is the key novelty of our work, combining the complementary strengths of SLMs and LLMs in a modular, resource-conscious framework for real-world security analytics.
+
+We conduct extensive experiments spanning baseline performance, prompting strategies, fine-tuning, and architectural design. Our evaluation covers eight models: four SLMs (Gemma-3-1B-IT, Gemma-3-4B-IT, Phi-4-Mini-Instruct, and Qwen-2.5-7B-Instruct-1M) and four LLMs (GPT-5, GPT-4o, Gemini 2.0 Flash, and Phi-4), using 230 NLQ-KQL pairs from Microsoft's NL2KQL Defender Evaluation Dataset~\cite{NL2KQL_Eval} and 83 additional queries from Sentinel-Queries~\cite{reprise99} for generalization. LLMs achieve high syntactic accuracy (above 0.90) but show variable semantic correctness, while SLMs perform poorly in zero-shot settings, with semantic scores near 0 and table/filter scores below 0.1. Targeted prompting and LoRA fine-tuning with rationale distillation significantly improve SLM performance, especially for Gemma-3-4B-IT with NL2KQL. Our two-stage SLM-Oracle architecture achieves a syntax score of 0.971 and semantic score of 0.769 on unseen schemas, approaching LLM performance while remaining up to 15x cheaper in token cost than GPT-4o. These findings show that SLMs, when combined with lightweight LLM refinement, enable accurate and cost-efficient KQL generation at scale.
+
+Our paper makes the following main contributions:
+Our main contributions are:
+\begin{itemize}[leftmargin=*]
+\item We present the first systematic evaluation of SLMs for NLQ-to-KQL translation, benchmarking multiple models under diverse prompting strategies to establish accuracy, cost, and latency baselines.
+\item We adapt NL2KQL for SLMs with lightweight components, introduce error-aware prompting to boost correctness without increasing token count, and apply LoRA fine-tuning with rationale distillation to transfer teacher reasoning to SLMs.
+\item We propose a \textbf{two-stage architecture} where an SLM generates candidate queries and a low-cost LLM refines them.
+\item Our approach achieves \textbf{near-LLM syntax accuracy, strong semantic performance, and up to 15x lower cost}, while maintaining low latency and generalizing effectively to unseen schemas.
+\end{itemize}
+ 

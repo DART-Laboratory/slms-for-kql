@@ -1,0 +1,36 @@
+\begin{table*}[!t]
+\centering
+\small
+\begin{tabular}{c|c|c|c|c|c|c|c|c}
+\hline
+\multicolumn{2}{c|}{\textbf{Model and Configuration}}  & \textbf{Syntax}  &  \textbf{Semantic} & \textbf{Table} &\textbf{Filter$_{\text{col}}$} &\textbf{Filter$_{\text{lit}}$} & \textbf{Latency} & \textbf{Avg. Cost} \\
+\hline
+\multirow{2}{*}{GPT-5} & Zero-Shot & 0.9 & 0.7 & 0.7 & 0.404 & 0.52 & 35.711 & \$0.267 \\
+& NL2KQL & 0.93 & 0.861 & 0.283 & 0.114 & 0.377 & 53.67 & \$2.018 \\
+\hline
+
+\multirow{2}{*}{GPT-4o} & Zero-Shot & 0.970 & 0.274 & 0.452 & 0.289 & 0.542 & 1.033 & \$0.136 \\
+& NL2KQL & 0.961 & 0.857 & 0.696 & 0.385 & 0.549 & 10.008 & \$2.998 \\
+\hline
+\multirow{2}{*}{Gemini 2.0 Flash} & Zero-Shot & 0.973 & 0.282 & 0.383 & 0.266 & 0.540 & 1.095 & \$0.009 \\
+& NL2KQL & 0.883 & 0.804 & 0.724 & 0.492 & 0.530 & 2.385 & \$0.107 \\ \hline
+\multirow{2}{*}{Microsoft Phi-4} & Zero-Shot & 0.845 & 0.029 & 0.126 & 0.061 & 0.407 & 2.126 & \$0.012\\
+& NL2KQL & 0.694 & 0.470 & 0.604 & 0.340 & 0.424 & 11.733 & \$0.127 \\ \hline
+\multirow{2}{*}{Microsoft Phi-4-Mini-Instruct} & Zero-Shot & 0.623 & 0.007 & 0.044 & 0.026 & 0.389 & 1.232 & \$0.006 \\
+& NL2KQL & 0.664 & 0.214 & 0.510 & 0.329 & 0.420 & 5.398 & \$0.076 \\ \hline
+\multirow{2}{*}{Gemma-3-1B-IT} & Zero-Shot & 0.443 & 0.007 & 0.0 & 0.0 & 0.294 & 1.373 & \$0.00 \\
+& NL2KQL & 0.771 & 0.248 & 0.321 & 0.220 & 0.253 & 4.286 & \$0.000 \\ \hline
+\multirow{2}{*}{Gemma-3-4B-IT} & Zero-Shot &0.741 & 0.0 & 0.004 & 0.0 & 0.373 & 1.793 & \$0.002 \\
+& NL2KQL & 0.803 & 0.446 & 0.629 & 0.317 & 0.495 & 6.859 & \$0.036 \\ \hline
+\multirow{2}{*}{Qwen2.5-7B-Instruct-1M} & Zero-Shot & 0.826 & 0.003 & 0.026 & 0.009 & 0.479
+& 0.947 & \$0.009 \\
+& NL2KQL & 0.641 & 0.413 & 0.419 & 0.31 & 0.401 & 6.258 & \$0.252 \\
+\hline
+\multirow{2}{*}{DeepSeek Coder 6.7B Instruct} & Zero-Shot & 0.793 & 0.027 & 0.072 & 0.028 & 0.438 & 2.712 & \$0.00 \\
+& NL2KQL & 0.742 & 0.531 & 0.555 & 0.336 & 0.433 & 9.445 & \$0.00 \\
+\hline
+
+\end{tabular}
+\caption{Evaluation of LLM and SLM prompting configurations (including NL2KQL) using syntax, semantic, table score, filtering accuracy, and efficiency metrics. Latency is the average time per NLQ (s/query). Cost is the total USD to run all 230 queries, based on token prices per million.}
+\label{tab:nl2kql-llm-slm-eval}
+\end{table*}

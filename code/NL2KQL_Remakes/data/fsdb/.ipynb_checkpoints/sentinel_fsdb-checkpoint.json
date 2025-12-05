@@ -1,0 +1,175 @@
+[
+    {
+        "tables": [
+            "StorageFileLogs"
+        ],
+        "theme": "Remediate: Identify events for a given entity or asset",
+        "nlq": "Count operations in storage logs for the last day, grouped by operation, status, IP, and ordered by count, for the specified account.",
+        "kql": "```kusto\nStorageFileLogs\n| where TimeGenerated > ago(1d)\n| where AccountName == \"your_account_name\" // Replace with the target account name\n| summarize count() by OperationName, StatusCode, StatusText, CallerIpAddress\n| order by count_ desc\n```",
+        "similarity_score": 0.7272727272727273
+    },
+    {
+        "tables": [
+            "AWSCloudTrail"
+        ],
+        "theme": "Expansion: Searches for additional contextual understanding",
+        "nlq": "Find AWS CloudTrail errors from the last week, group by user and event, then show the top 20 most frequent errors.",
+        "kql": "```kusto\nAWSCloudTrail\n| where TimeGenerated > ago(7d)\n| where UserIdentityType != \"Anonymous\"\n| where ErrorCode != \"\"\n| extend User = coalesce(UserIdentityUserName, UserIdentityPrincipalid, SourceIpAddress)\n| summarize count() by User, EventName, AWSRegion, ErrorCode\n| top 20 by count_ desc\n```",
+        "similarity_score": 0.5806451612903226
+    },
+    {
+        "tables": [
+            "AWSCloudTrail"
+        ],
+        "theme": "Remediate: Identify events for a given entity or asset",
+        "nlq": "Find AWS CloudTrail logs from the last 7 days for a specific user, showing event details.",
+        "kql": "```kusto\nAWSCloudTrail\n| where TimeGenerated > ago(7d)\n| where UserIdentityPrincipalid == \"specific-user-id\" or UserIdentityUserName == \"specific-user-name\" or UserIdentityArn == \"arn:aws:iam::123456789012:user/specific-user\"\n| project TimeGenerated, EventName, EventSource, UserIdentityPrincipalid, UserIdentityUserName, UserIdentityArn, SourceIpAddress, ErrorCode, ErrorMessage, RequestParameters, Resources\n```",
+        "similarity_score": 0.5
+    },
+    {
+        "tables": [
+            "AADManagedIdentitySignInLogs"
+        ],
+        "theme": "Remediate: Identify events for a given entity or asset",
+        "nlq": "Count failed managed identity sign-ins from the last week, grouped by identity and failure reason, ordered by frequency.",
+        "kql": "```kusto\nAADManagedIdentitySignInLogs\n| where TimeGenerated > ago(7d)\n| where ResultType != 0 // Exclude successful sign-ins for remediation focus\n| where isnotempty(Identity)\n| summarize EventCount = count() by Identity, ResultDescription\n| order by EventCount desc\n```",
+        "similarity_score": 0.5483870967741935
+    },
+    {
+        "tables": [
+            "SqlAtpStatus"
+        ],
+        "theme": "Remediate: Identify events for a given entity or asset",
+        "nlq": "Count unhealthy SQL ATP statuses from the last week, grouped by computer, instance, and status, ordered by count.",
+        "kql": "```kusto\nSqlAtpStatus\n| where TimeGenerated > ago(7d)\n| where Status != \"Healthy\"\n| summarize count() by Computer, SqlInstanceName, Status\n| order by count_ desc\n```",
+        "similarity_score": 0.85
+    },
+    {
+        "tables": [
+            "AADNonInteractiveUserSignInLogs"
+        ],
+        "theme": "Remediate: Identify events for a given entity or asset",
+        "nlq": "Find recent failed non-interactive logins for a user, count them by application, result, and risk level.",
+        "kql": "```kusto\nAADNonInteractiveUserSignInLogs\n| where TimeGenerated > ago(7d)\n| where UserPrincipalName == \"user@example.com\" or UserId == \"user_id_guid\"\n| extend RiskLevel = coalesce(RiskLevelAggregated, RiskLevelDuringSignIn)\n| where ResultType != 0\n| summarize count() by AppDisplayName, ResultType, ResultDescription, RiskLevel\n| order by count_ desc\n```",
+        "similarity_score": 0.5588235294117647
+    },
+    {
+        "tables": [
+            "AADUserRiskEvents"
+        ],
+        "theme": "Remediate: Identify events for a given entity or asset",
+        "nlq": "Count user risk events (active/compromised, non-none) from the last 30 days, grouped by user, event type, and risk level.",
+        "kql": "```kusto\nAADUserRiskEvents\n| where TimeGenerated > ago(30d)\n| where RiskLevel != \"None\"\n| where RiskState == \"Active\" or RiskState == \"ConfirmedCompromised\"\n| summarize count() by UserPrincipalName, RiskEventType, RiskLevel\n| order by count_ desc\n```",
+        "similarity_score": 0.5
+    },
+    {
+        "tables": [
+            "AADRiskyUsers"
+        ],
+        "theme": "Report: Provide summary statistics for reporting",
+        "nlq": "Count risky users, unique users, and risk levels per tenant from the last 30 days, adding a report date.",
+        "kql": "```kusto\nAADRiskyUsers\n| where TimeGenerated > ago(30d)\n| summarize count(), dcount(UserPrincipalName), make_set(RiskLevel) by TenantId\n| extend ReportDate = now()\n```",
+        "similarity_score": 0.6956521739130435
+    },
+    {
+        "tables": [
+            "SqlAtpStatus"
+        ],
+        "theme": "Expansion: Searches for additional contextual understanding",
+        "nlq": "Count unhealthy SQL instances from the last 30 days, grouped by name and status, ordered by count.",
+        "kql": "```kusto\nSqlAtpStatus\n| where TimeGenerated > ago(30d)\n| where Status != \"Healthy\" // Security-relevant filter: Focus on unhealthy instances\n| summarize count() by SqlInstanceName, Status\n| order by count_ desc\n```",
+        "similarity_score": 0.6153846153846154
+    },
+    {
+        "tables": [
+            "VMConnection"
+        ],
+        "theme": "Expansion: Searches for additional contextual understanding",
+        "nlq": "Find top 10 computers with malicious connections in the last day, grouped by IP, location, and threat type.",
+        "kql": "```kusto\nVMConnection\n| where TimeGenerated > ago(1d)\n| where isnotempty(RemoteIp)\n| where isnotempty(Computer)\n| where MaliciousIp == \"True\"\n| extend GeoLocation = strcat(RemoteLongitude, \",\", RemoteLatitude)\n| summarize count() by Computer, RemoteIp, RemoteCountry, RemoteClassification, IndicatorThreatType, GeoLocation\n| top 10 by count_ desc\n```",
+        "similarity_score": 0.5757575757575758
+    },
+    {
+        "tables": [
+            "AADRiskyUsers"
+        ],
+        "theme": "Explore: Look for signs or hints of a security attack",
+        "nlq": "Find risky users with multiple alerts in the last week, excluding those with no risk, sorted by alert count.",
+        "kql": "```kusto\nAADRiskyUsers\n| where TimeGenerated >= ago(7d)\n| where RiskLevel != \"none\"\n| summarize count() by RiskLevel, UserPrincipalName\n| where count_ > 1\n| order by count_ desc\n```",
+        "similarity_score": 0.782608695652174
+    },
+    {
+        "tables": [
+            "AADRiskyUsers",
+            "StorageBlobLogs"
+        ],
+        "theme": "Remediate: Identify events for a given entity or asset",
+        "nlq": "Find risky users, enrich with storage blob log counts based on UPN and correlation ID.",
+        "kql": "```kusto\nAADRiskyUsers\n| where RiskLevel != \"none\"\n| join kind=leftouter (\n    StorageBlobLogs\n    | where isnotempty(RequesterUpn)\n    | summarize count() by RequesterUpn, CorrelationId\n) on $left.UserPrincipalName == $right.RequesterUpn and $left.CorrelationId == $right.CorrelationId\n| project TimeGenerated, UserPrincipalName, RiskLevel, RiskDetail, RiskLastUpdatedDateTime, OperationName, SourceSystem, AccountName = RequesterUpn, StorageBlobLogCount = count_\n| order by TimeGenerated desc\n```",
+        "similarity_score": 0.509090909090909
+    },
+    {
+        "tables": [
+            "VMBoundPort"
+        ],
+        "theme": "Expansion: Searches for additional contextual understanding",
+        "nlq": "Analyze network data, sum traffic, filter for active connections, rank top 10 computers by total bytes transferred in the last day.",
+        "kql": "```kusto\nVMBoundPort\n| where TimeGenerated > ago(1d)\n| where Protocol in (\"TCP\", \"UDP\")\n| summarize BytesSent = sum(BytesSent), BytesReceived = sum(BytesReceived), LinksLive = sum(LinksLive), LinksTerminated = sum(LinksTerminated), LinksEstablished = sum(LinksEstablished) by Computer, ProcessName, Ip, Port, Protocol\n| extend TotalBytes = BytesSent + BytesReceived\n| where TotalBytes > 0\n| top 10 by TotalBytes desc\n```",
+        "similarity_score": 0.5384615384615384
+    },
+    {
+        "tables": [
+            "Event"
+        ],
+        "theme": "Remediate: Identify events for a given entity or asset",
+        "nlq": "Find Windows errors/warnings from the last day, count them by computer/ID/level, and list them by count.",
+        "kql": "```kusto\nEvent\n| where TimeGenerated > ago(1d)\n| where EventLevelName in (\"Error\", \"Warning\")\n| where SourceSystem == \"Windows\"\n| summarize count() by Computer, EventID, EventLevelName\n| order by count_ desc\n```",
+        "similarity_score": 0.88
+    },
+    {
+        "tables": [
+            "VMConnection"
+        ],
+        "theme": "Expansion: Searches for additional contextual understanding",
+        "nlq": "Count malicious connections from the last day, grouped by country, threat type, and description, ordered by count.",
+        "kql": "```kusto\nVMConnection\n| where TimeGenerated > ago(1d)\n| where isnotempty(RemoteIp) or isnotempty(DestinationIp)\n| where MaliciousIp == \"True\"\n| summarize count() by RemoteCountry, IndicatorThreatType, Description\n| order by count_ desc\n```",
+        "similarity_score": 0.8695652173913043
+    },
+    {
+        "tables": [
+            "Event"
+        ],
+        "theme": "Report: Provide summary statistics for reporting",
+        "nlq": "Analyze Windows/Security events from the last 30 days, count errors/warnings/criticals, distinct computers/event IDs, grouped by tenant.",
+        "kql": "```kusto\nEvent\n| where TimeGenerated > ago(30d)\n| where EventLevelName in (\"Error\", \"Warning\", \"Critical\")\n| where SourceSystem == \"Windows\" or Source == \"Security\"\n| summarize count(), \n    countif(EventLevelName == \"Error\"), \n    countif(EventLevelName == \"Warning\"), \n    countif(EventLevelName == \"Critical\"), \n    dcount(Computer), \n    dcount(EventID) \n    by TenantId\n| project TenantId, TotalEvents=count_, Errors=countif_EventLevelName_Error, Warnings=countif_EventLevelName_Warning, Criticals=countif_EventLevelName_Critical, DistinctComputers=dcount_Computer, DistinctEventIDs=dcount_EventID\n```",
+        "similarity_score": 0.5476190476190477
+    },
+    {
+        "tables": [
+            "SecurityIncident"
+        ],
+        "theme": "Remediate: Identify events for a given entity or asset",
+        "nlq": "Count security incidents from the last 30 days, grouped by tenant, severity, and status, then order the results.",
+        "kql": "```kusto\nSecurityIncident\n| where TimeGenerated >= ago(30d)\n| where Severity >= 3\n| summarize count() by TenantId, Severity, Status\n| order by TenantId, Severity, Status\n```",
+        "similarity_score": 0.8823529411764706
+    },
+    {
+        "tables": [
+            "Heartbeat"
+        ],
+        "theme": "Expansion: Searches for additional contextual understanding",
+        "nlq": "Count heartbeats by computer, OS type, and name, excluding empty OS types, then order by count descending.",
+        "kql": "```kusto\nHeartbeat\n| where OSType != \"\"\n| summarize count() by Computer, OSType, OSName\n| order by count_ desc\n```",
+        "similarity_score": 0.8421052631578947
+    },
+    {
+        "tables": [
+            "Heartbeat",
+            "AADManagedIdentitySignInLogs"
+        ],
+        "theme": "Report: Provide summary statistics for reporting",
+        "nlq": "Count successful managed identity logins by location, app, and description, enriching with machine details and categorizing the results.",
+        "kql": "```kusto\nAADManagedIdentitySignInLogs\n| where TimeGenerated > ago(30d)\n| where ResultType == 0 // Successful sign-ins\n| summarize count() by Location, AppId, ResultDescription\n| extend Category = \"AAD Managed Identity Sign-in\"\n| join kind=leftouter (\n    Heartbeat\n    | where TimeGenerated > ago(30d)\n    | summarize arg_max(TimeGenerated, *) by ResourceId\n    | project ResourceId, Computer, ComputerIP, OSType, OSName, ResourceGroup, TenantId\n) on $left.ResourceId == $right.ResourceId\n| project Location, AppId, ResultDescription, count_, Computer, ComputerIP, OSType, OSName, ResourceGroup, TenantId, Category\n| order by count_ desc\n```",
+        "similarity_score": 0.5
+    }
+]

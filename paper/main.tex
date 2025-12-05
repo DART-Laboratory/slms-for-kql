@@ -1,0 +1,67 @@
+%% \documentclass[11pt,letterpaper,twocolumn]{article}
+%% % conference specific style
+%% \usepackage[11pt,nocopyright]{sty/sigmin}
+
+\documentclass[sigconf, anonymous, review]{acmart}
+
+\input{macros}
+\input{tables/inspection-macros}
+% include custom and table macros 
+
+\setcopyright{acmlicensed}
+\copyrightyear{2026}
+\acmYear{2026}
+\acmDOI{XXXXXXX.XXXXXXX}
+\acmConference[WWW '26]{The Web Conference}{April 13--17,
+  2026}{Dubai, UAE}
+
+\acmISBN{978-1-4503-XXXX-X/2018/06}
+
+  
+\begin{document}
+
+\title{Towards Small Language Models for Security Query Generation in SOC Workflows}
+\begin{abstract}
+  \input{abstract} 
+  \end{abstract}  
+\maketitle
+\input{intro}
+\input{relwk}
+\input{problem}
+\input{methodology}
+\input{eval}
+\input{discussion}
+\input{conclusion}
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{bib-files/hassan,bib-files/hassan-misc}
+
+\appendix
+\input{appendix}
+
+\end{document}
+
+% \documentclass[conference]{sty/IEEEtran}
+% \IEEEoverridecommandlockouts
+
+% % include custom and table macros 
+% \include{macros}
+% \include{tables/inspection-macros}
+
+% \begin{document}
+
+% \title{\Sys: TITLE GOES HERE}
+% \maketitle
+% \input{abstract}
+% \input{intro}
+% \input{design}
+% \input{eval}
+% \input{relwk}
+% \input{conclusion}
+% %% \input{ack}
+% \balance
+% \bibliographystyle{abbrvnat}
+% \footnotesize
+% \setlength{\bibsep}{3pt}
+% \bibliography{bib-files/hassan,bib-files/hassan-misc}
+% \end{document}

@@ -1,0 +1,147 @@
+{
+  "1": {
+    "name": "AADSignInEventsBeta",
+    "description": "Information about Azure Active Directory (AAD) sign-in events either by a user (interactive) or a client on the user's behalf (non-interactive)",
+    "columns": ["Timestamp", "Application", "ApplicationId", "LogonType", "EndpointCall", "ErrorCode", "CorrelationId", "SessionId", "AccountDisplayName", "AccountObjectId", "AccountUpn", "IsExternalUser", "IsGuestUser", "AlternateSignInName", "LastPasswordChangeTimestamp", "ResourceDisplayName", "ResourceId", "ResourceTenantId", "DeviceName", "AadDeviceId", "OSPlatform", "DeviceTrustType", "IsManaged", "IsCompliant", "AuthenticationProcessingDetails", "AuthenticationRequirement", "TokenIssuerType", "RiskLevelAggregated", "RiskLevelDuringSignIn", "RiskEventTypes", "RiskState", "UserAgent", "ClientAppUsed", "Browser", "ConditionalAccessPolicies", "ConditionalAccessStatus", "IPAddress", "Country", "State", "City", "Latitude", "Longitude", "NetworkLocationDetails", "RequestId", "ReportId", "OAUTHProtocol"]
+  },
+  "2": {
+    "name": "AADSpnSignInEventsBeta",
+    "description": "Information about sign-in events initiated by Azure Active Directory (AAD) service principal or managed identities",
+    "columns": ["Timestamp", "Application", "ApplicationId", "IsManagedIdentity", "ErrorCode", "CorrelationId", "ServicePrincipalName", "ServicePrincipalId", "ResourceDisplayName", "ResourceId", "ResourceTenantId", "IPAddress", "Country", "State", "City", "Latitude", "Longitude", "RequestId", "ReportId"]
+  },
+  "3": {
+    "name": "AlertEvidence",
+    "description": "Information about alerts from Microsoft Defender for Endpoint, Microsoft Defender for Office 365, Microsoft Cloud App Security, and Microsoft Defender for Identity, including severity information and threat categorization and the files, emails, IP addresses, URLs, users, devices or other entities associated with them. Each piece of evidence for an alert will have its own row with only the appropriate columns populated.",
+    "columns": ["Timestamp", "AlertId", "Title", "Categories", "AttackTechniques", "ServiceSource", "DetectionSource", "EntityType", "EvidenceRole", "EvidenceDirection", "FileName", "FolderPath", "SHA1", "SHA256", "FileSize", "ThreatFamily", "RemoteIP", "RemoteUrl", "AccountName", "AccountDomain", "AccountSid", "AccountObjectId", "AccountUpn", "DeviceId", "DeviceName", "LocalIP", "NetworkMessageId", "EmailSubject", "Application", "ApplicationId", "OAuthApplicationId", "ProcessCommandLine", "RegistryKey", "RegistryValueName", "RegistryValueData", "AdditionalFields", "Severity", "CloudPlatform", "CloudResource", "EmailClusterId", "ResourceID", "ResourceType", "SubscriptionId"]
+  },
+  "4": {
+    "name": "AlertInfo",
+    "description": "Alerts from Microsoft Defender for Endpoint, Microsoft Defender for Office 365, Microsoft Cloud App Security, and Microsoft Defender for Identity, including severity information and threat categorization",
+    "columns": ["Timestamp", "AlertId", "Title", "Category", "Severity", "ServiceSource", "DetectionSource", "AttackTechniques", "AdditionalFields"]
+  },
+  "5": {
+    "name": "CloudAppEvents",
+    "description": "Events involving accounts and objects in Office 365 and other cloud apps and services",
+    "columns": ["Timestamp", "ActionType", "Application", "ApplicationId", "AppInstanceId", "AccountObjectId", "AccountId", "AccountDisplayName", "IsAdminOperation", "DeviceType", "OSPlatform", "IPAddress", "IsAnonymousProxy", "CountryCode", "City", "ISP", "UserAgent", "ActivityType", "ActivityObjects", "ObjectName", "ObjectType", "ObjectId", "ReportId", "AccountType", "IsExternalUser", "IsImpersonated", "IPTags", "IPCategory", "UserAgentTags", "RawEventData", "AdditionalFields", "FirstSeen", "LastSeenForUser", "ThreatIndicators", "UncommonForUser"]
+  },
+  "6": {
+    "name": "DeviceEvents",
+    "description": "Multiple event types, including events triggered by security controls such as Windows Defender Antivirus and exploit protection",
+    "columns": ["Timestamp", "DeviceId", "DeviceName", "ActionType", "FileName", "FolderPath", "SHA1", "SHA256", "MD5", "FileSize", "AccountDomain", "AccountName", "AccountSid", "RemoteUrl", "RemoteDeviceName", "ProcessId", "ProcessCommandLine", "ProcessCreationTime", "ProcessTokenElevation", "LogonId", "RegistryKey", "RegistryValueName", "RegistryValueData", "RemoteIP", "RemotePort", "LocalIP", "LocalPort", "FileOriginUrl", "FileOriginIP", "InitiatingProcessSHA1", "InitiatingProcessSHA256", "InitiatingProcessMD5", "InitiatingProcessFileName", "InitiatingProcessFileSize", "InitiatingProcessFolderPath", "InitiatingProcessId", "InitiatingProcessCommandLine", "InitiatingProcessCreationTime", "InitiatingProcessAccountDomain", "InitiatingProcessAccountName", "InitiatingProcessAccountSid", "InitiatingProcessAccountUpn", "InitiatingProcessAccountObjectId", "InitiatingProcessVersionInfoCompanyName", "InitiatingProcessVersionInfoProductName", "InitiatingProcessVersionInfoProductVersion", "InitiatingProcessVersionInfoInternalFileName", "InitiatingProcessVersionInfoOriginalFileName", "InitiatingProcessVersionInfoFileDescription", "InitiatingProcessParentId", "InitiatingProcessParentFileName", "InitiatingProcessParentCreationTime", "InitiatingProcessLogonId", "ReportId", "AppGuardContainerId", "AdditionalFields"]
+  },
+  "7": {
+    "name": "DeviceFileCertificateInfo",
+    "description": "Certificate information of signed files obtained from certificate verification events on endpoints",
+    "columns": ["Timestamp", "DeviceId", "DeviceName", "SHA1", "IsSigned", "SignatureType", "Signer", "SignerHash", "Issuer", "IssuerHash", "CertificateSerialNumber", "CrlDistributionPointUrls", "CertificateCreationTime", "CertificateExpirationTime", "CertificateCountersignatureTime", "IsTrusted", "IsRootSignerMicrosoft", "ReportId"]
+  },
+  "8": {
+    "name": "DeviceFileEvents",
+    "description": "File creation, modification, and other file system events",
+    "columns": ["Timestamp", "DeviceId", "DeviceName", "ActionType", "FileName", "FolderPath", "SHA1", "SHA256", "MD5", "FileOriginUrl", "FileOriginReferrerUrl", "FileOriginIP", "PreviousFolderPath", "PreviousFileName", "FileSize", "InitiatingProcessAccountDomain", "InitiatingProcessAccountName", "InitiatingProcessAccountSid", "InitiatingProcessAccountUpn", "InitiatingProcessAccountObjectId", "InitiatingProcessMD5", "InitiatingProcessSHA1", "InitiatingProcessSHA256", "InitiatingProcessFolderPath", "InitiatingProcessFileName", "InitiatingProcessFileSize", "InitiatingProcessVersionInfoCompanyName", "InitiatingProcessVersionInfoProductName", "InitiatingProcessVersionInfoProductVersion", "InitiatingProcessVersionInfoInternalFileName", "InitiatingProcessVersionInfoOriginalFileName", "InitiatingProcessVersionInfoFileDescription", "InitiatingProcessId", "InitiatingProcessCommandLine", "InitiatingProcessCreationTime", "InitiatingProcessIntegrityLevel", "InitiatingProcessTokenElevation", "InitiatingProcessParentId", "InitiatingProcessParentFileName", "InitiatingProcessParentCreationTime", "RequestProtocol", "RequestSourceIP", "RequestSourcePort", "RequestAccountName", "RequestAccountDomain", "RequestAccountSid", "ShareName", "SensitivityLabel", "SensitivitySubLabel", "IsAzureInfoProtectionApplied", "ReportId", "AppGuardContainerId", "AdditionalFields"]
+  },
+  "9": {
+    "name": "DeviceImageLoadEvents",
+    "description": "DLL loading events on devices in the network, including information on the file loaded.",
+    "columns": ["Timestamp", "DeviceId", "DeviceName", "ActionType", "FileName", "FolderPath", "SHA1", "SHA256", "MD5", "FileSize", "InitiatingProcessAccountDomain", "InitiatingProcessAccountName", "InitiatingProcessAccountSid", "InitiatingProcessAccountUpn", "InitiatingProcessAccountObjectId", "InitiatingProcessIntegrityLevel", "InitiatingProcessTokenElevation", "InitiatingProcessSHA1", "InitiatingProcessSHA256", "InitiatingProcessMD5", "InitiatingProcessFileName", "InitiatingProcessFileSize", "InitiatingProcessVersionInfoCompanyName", "InitiatingProcessVersionInfoProductName", "InitiatingProcessVersionInfoProductVersion", "InitiatingProcessVersionInfoInternalFileName", "InitiatingProcessVersionInfoOriginalFileName", "InitiatingProcessVersionInfoFileDescription", "InitiatingProcessId", "InitiatingProcessCommandLine", "InitiatingProcessCreationTime", "InitiatingProcessFolderPath", "InitiatingProcessParentId", "InitiatingProcessParentFileName", "InitiatingProcessParentCreationTime", "ReportId", "AppGuardContainerId"]
+  },
+  "10": {
+    "name": "DeviceInfo",
+    "description": "Machine information, including OS information",
+    "columns": ["Timestamp", "DeviceId", "DeviceName", "ClientVersion", "PublicIP", "OSArchitecture", "OSPlatform", "OSBuild", "IsAzureADJoined", "JoinType", "AadDeviceId", "LoggedOnUsers", "RegistryDeviceTag", "OSVersion", "MachineGroup", "ReportId", "OnboardingStatus", "AdditionalFields", "DeviceCategory", "DeviceType", "DeviceSubtype", "Model", "Vendor", "OSDistribution", "OSVersionInfo", "MergedDeviceIds", "MergedToDeviceId", "AssetValue", "DeviceDynamicTags", "DeviceManualTags", "DeviceRole", "ExclusionReason", "ExposureLevel", "IsExcluded", "IsInternetFacing", "MitigationStatus", "SensorHealthState"]
+  },
+  "11": {
+    "name": "DeviceLogonEvents",
+    "description": "Sign-ins and other authentication events on machines, including the type of sign-in and the process that initiated the sign-in, where applicable.",
+    "columns": ["Timestamp", "DeviceId", "DeviceName", "ActionType", "LogonType", "AccountDomain", "AccountName", "AccountSid", "Protocol", "FailureReason", "IsLocalAdmin", "LogonId", "RemoteDeviceName", "RemoteIP", "RemoteIPType", "RemotePort", "InitiatingProcessAccountDomain", "InitiatingProcessAccountName", "InitiatingProcessAccountSid", "InitiatingProcessAccountUpn", "InitiatingProcessAccountObjectId", "InitiatingProcessIntegrityLevel", "InitiatingProcessTokenElevation", "InitiatingProcessSHA1", "InitiatingProcessSHA256", "InitiatingProcessMD5", "InitiatingProcessFileName", "InitiatingProcessFileSize", "InitiatingProcessVersionInfoCompanyName", "InitiatingProcessVersionInfoProductName", "InitiatingProcessVersionInfoProductVersion", "InitiatingProcessVersionInfoInternalFileName", "InitiatingProcessVersionInfoOriginalFileName", "InitiatingProcessVersionInfoFileDescription", "InitiatingProcessId", "InitiatingProcessCommandLine", "InitiatingProcessCreationTime", "InitiatingProcessFolderPath", "InitiatingProcessParentId", "InitiatingProcessParentFileName", "InitiatingProcessParentCreationTime", "ReportId", "AppGuardContainerId", "AdditionalFields"]
+  },
+  "12": {
+    "name": "DeviceNetworkEvents",
+    "description": "Network connection and related events, with information on the local and remote IP addresses, type of connection, initiating process, URL or remote domain, and more.",
+    "columns": ["Timestamp", "DeviceId", "DeviceName", "ActionType", "RemoteIP", "RemotePort", "RemoteUrl", "LocalIP", "LocalPort", "Protocol", "LocalIPType", "RemoteIPType", "InitiatingProcessSHA1", "InitiatingProcessSHA256", "InitiatingProcessMD5", "InitiatingProcessFileName", "InitiatingProcessFileSize", "InitiatingProcessVersionInfoCompanyName", "InitiatingProcessVersionInfoProductName", "InitiatingProcessVersionInfoProductVersion", "InitiatingProcessVersionInfoInternalFileName", "InitiatingProcessVersionInfoOriginalFileName", "InitiatingProcessVersionInfoFileDescription", "InitiatingProcessId", "InitiatingProcessCommandLine", "InitiatingProcessCreationTime", "InitiatingProcessFolderPath", "InitiatingProcessParentFileName", "InitiatingProcessParentId", "InitiatingProcessParentCreationTime", "InitiatingProcessAccountDomain", "InitiatingProcessAccountName", "InitiatingProcessAccountSid", "InitiatingProcessAccountUpn", "InitiatingProcessAccountObjectId", "InitiatingProcessIntegrityLevel", "InitiatingProcessTokenElevation", "ReportId", "AppGuardContainerId", "AdditionalFields"]
+  },
+  "13": {
+    "name": "DeviceNetworkInfo",
+    "description": "Network properties of machines, including adapters, IP and MAC addresses, as well as connected networks and domains",
+    "columns": ["Timestamp", "DeviceId", "DeviceName", "NetworkAdapterName", "MacAddress", "NetworkAdapterType", "NetworkAdapterStatus", "TunnelType", "ConnectedNetworks", "DnsAddresses", "IPv4Dhcp", "IPv6Dhcp", "DefaultGateways", "IPAddresses", "ReportId", "NetworkAdapterVendor"]
+  },
+  "14": {
+    "name": "DeviceProcessEvents",
+    "description": "Process creation and related events including information on the associated users, devices, and files in addition to the process itself such as its command line, elevation, and more.",
+    "columns": ["Timestamp", "DeviceId", "DeviceName", "ActionType", "FileName", "FolderPath", "SHA1", "SHA256", "MD5", "FileSize", "ProcessVersionInfoCompanyName", "ProcessVersionInfoProductName", "ProcessVersionInfoProductVersion", "ProcessVersionInfoInternalFileName", "ProcessVersionInfoOriginalFileName", "ProcessVersionInfoFileDescription", "ProcessId", "ProcessCommandLine", "ProcessIntegrityLevel", "ProcessTokenElevation", "ProcessCreationTime", "AccountDomain", "AccountName", "AccountSid", "AccountUpn", "AccountObjectId", "LogonId", "InitiatingProcessAccountDomain", "InitiatingProcessAccountName", "InitiatingProcessAccountSid", "InitiatingProcessAccountUpn", "InitiatingProcessAccountObjectId", "InitiatingProcessLogonId", "InitiatingProcessIntegrityLevel", "InitiatingProcessTokenElevation", "InitiatingProcessSHA1", "InitiatingProcessSHA256", "InitiatingProcessMD5", "InitiatingProcessFileName", "InitiatingProcessFileSize", "InitiatingProcessVersionInfoCompanyName", "InitiatingProcessVersionInfoProductName", "InitiatingProcessVersionInfoProductVersion", "InitiatingProcessVersionInfoInternalFileName", "InitiatingProcessVersionInfoOriginalFileName", "InitiatingProcessVersionInfoFileDescription", "InitiatingProcessId", "InitiatingProcessCommandLine", "InitiatingProcessCreationTime", "InitiatingProcessFolderPath", "InitiatingProcessParentId", "InitiatingProcessParentFileName", "InitiatingProcessParentCreationTime", "InitiatingProcessSignerType", "InitiatingProcessSignatureStatus", "ReportId", "AppGuardContainerId", "AdditionalFields"]
+  },
+  "15": {
+    "name": "DeviceRegistryEvents",
+    "description": "Creation, deletion, and modification of registry entries, including the actor and device involved, previous and current values, and more. This information can be used to track and investigate changes to a machine's configuration.",
+    "columns": ["Timestamp", "DeviceId", "DeviceName", "ActionType", "RegistryKey", "RegistryValueType", "RegistryValueName", "RegistryValueData", "PreviousRegistryKey", "PreviousRegistryValueName", "PreviousRegistryValueData", "InitiatingProcessAccountDomain", "InitiatingProcessAccountName", "InitiatingProcessAccountSid", "InitiatingProcessAccountUpn", "InitiatingProcessAccountObjectId", "InitiatingProcessSHA1", "InitiatingProcessSHA256", "InitiatingProcessMD5", "InitiatingProcessFileName", "InitiatingProcessFileSize", "InitiatingProcessVersionInfoCompanyName", "InitiatingProcessVersionInfoProductName", "InitiatingProcessVersionInfoProductVersion", "InitiatingProcessVersionInfoInternalFileName", "InitiatingProcessVersionInfoOriginalFileName", "InitiatingProcessVersionInfoFileDescription", "InitiatingProcessId", "InitiatingProcessCommandLine", "InitiatingProcessCreationTime", "InitiatingProcessFolderPath", "InitiatingProcessParentId", "InitiatingProcessParentFileName", "InitiatingProcessParentCreationTime", "InitiatingProcessIntegrityLevel", "InitiatingProcessTokenElevation", "ReportId", "AppGuardContainerId"]
+  },
+  "16": {
+    "name": "DeviceTvmHardwareFirmware",
+    "description": "Information about device hardware and firmware, as checked by Microsoft Defender Vulnerability Management. The information includes the system model, processor, and BIOS, among others.",
+    "columns": ["DeviceId", "DeviceName", "ComponentType", "Manufacturer", "ComponentName", "ComponentFamily", "ComponentVersion", "AdditionalFields"]
+  },
+  "17": {
+    "name": "DeviceTvmSecureConfigurationAssessment",
+    "description": "Threat & Vulnerability Management assessment events, indicating the status of various security configurations on devices",
+    "columns": ["DeviceId", "DeviceName", "OSPlatform", "Timestamp", "ConfigurationId", "ConfigurationCategory", "ConfigurationSubcategory", "ConfigurationImpact", "IsCompliant", "IsApplicable", "Context", "IsExpectedUserImpact"]
+  },
+  "18": {
+    "name": "DeviceTvmSoftwareInventory",
+    "description": "Inventory of software installed on devices, including their version information and end-of-support status",
+    "columns": ["DeviceId", "DeviceName", "OSPlatform", "OSVersion", "OSArchitecture", "SoftwareVendor", "SoftwareName", "SoftwareVersion", "EndOfSupportStatus", "EndOfSupportDate", "ProductCodeCpe"]
+  },
+  "19": {
+    "name": "DeviceTvmSoftwareVulnerabilities",
+    "description": "Software vulnerabilities found on devices and the list of available security updates that address each vulnerability",
+    "columns": ["DeviceId", "DeviceName", "OSPlatform", "OSVersion", "OSArchitecture", "SoftwareVendor", "SoftwareName", "SoftwareVersion", "CveId", "VulnerabilitySeverityLevel", "RecommendedSecurityUpdate", "RecommendedSecurityUpdateId", "CveTags", "CveMitigationStatus"]
+  },
+  "20": {
+    "name": "DeviceTvmSoftwareVulnerabilitiesKB",
+    "description": "Knowledge base of publicly disclosed vulnerabilities, including whether exploit code is publicly available",
+    "columns": ["CveId", "CvssScore", "IsExploitAvailable", "VulnerabilitySeverityLevel", "LastModifiedTime", "PublishedDate", "VulnerabilityDescription", "AffectedSoftware"]
+  },
+  "21": {
+    "name": "EmailAttachmentInfo",
+    "description": "Information about files attached to Office 365 emails, including details about the containing email and any threats detected in the attachment",
+    "columns": ["Timestamp", "NetworkMessageId", "SenderFromAddress", "SenderDisplayName", "SenderObjectId", "RecipientEmailAddress", "RecipientObjectId", "FileName", "FileType", "SHA256", "FileSize", "ThreatTypes", "ThreatNames", "DetectionMethods", "ReportId"]
+  },
+  "22": {
+    "name": "EmailEvents",
+    "description": "Office 365 email events, including email delivery and blocking events, sender and recipient details, threat detection, and more.",
+    "columns": ["Timestamp", "NetworkMessageId", "InternetMessageId", "SenderMailFromAddress", "SenderFromAddress", "SenderDisplayName", "SenderObjectId", "SenderMailFromDomain", "SenderFromDomain", "SenderIPv4", "SenderIPv6", "RecipientEmailAddress", "RecipientObjectId", "Subject", "EmailClusterId", "EmailDirection", "DeliveryAction", "DeliveryLocation", "ThreatTypes", "ThreatNames", "DetectionMethods", "ConfidenceLevel", "BulkComplaintLevel", "EmailAction", "EmailActionPolicy", "EmailActionPolicyGuid", "AuthenticationDetails", "AttachmentCount", "UrlCount", "EmailLanguage", "Connectors", "OrgLevelAction", "OrgLevelPolicy", "UserLevelAction", "UserLevelPolicy", "ReportId", "AdditionalFields", "Cc", "DistributionList", "ExchangeTransportRule", "ForwardingInformation", "LatestDeliveryAction", "LatestDeliveryLocation", "To"]
+  },
+  "23": {
+    "name": "EmailPostDeliveryEvents",
+    "description": "Security events that occur post-delivery, after Office 365 has delivered an email message to the recipient mailbox",
+    "columns": ["Timestamp", "NetworkMessageId", "InternetMessageId", "Action", "ActionType", "ActionTrigger", "ActionResult", "RecipientEmailAddress", "DeliveryLocation", "ThreatTypes", "DetectionMethods", "ReportId"]
+  },
+  "24": {
+    "name": "EmailUrlInfo",
+    "description": "Information about URLs found within Office 365 emails",
+    "columns": ["Timestamp", "NetworkMessageId", "Url", "UrlDomain", "UrlLocation", "ReportId"]
+  },
+  "25": {
+    "name": "IdentityDirectoryEvents",
+    "description": "Events involving an on-premises domain controller running Active Directory (AD). This table captures various identity-related events, like password changes, password expiration, and user principal name (UPN) changes. It also captures system events on the domain controller, like scheduling of tasks and PowerShell activity.",
+    "columns": ["Timestamp", "ActionType", "Application", "TargetAccountUpn", "TargetAccountDisplayName", "TargetDeviceName", "DestinationDeviceName", "DestinationIPAddress", "DestinationPort", "Protocol", "AccountName", "AccountDomain", "AccountUpn", "AccountSid", "AccountObjectId", "AccountDisplayName", "DeviceName", "IPAddress", "Port", "Location", "ISP", "ReportId", "AdditionalFields"]
+  },
+  "26": {
+    "name": "IdentityInfo",
+    "description": "Account information from various sources, including Azure Active Directory",
+    "columns": ["Timestamp", "AccountObjectId", "AccountUpn", "OnPremSid", "AccountDisplayName", "AccountName", "AccountDomain", "DistinguishedName", "CloudSid", "GivenName", "Surname", "Department", "JobTitle", "EmailAddress", "SipProxyAddress", "Address", "City", "Country", "IsAccountEnabled", "Manager", "Phone", "CreatedDateTime"]
+  },
+  "27": {
+    "name": "IdentityLogonEvents",
+    "description": "Authentication activities made through an on-premises Active Directory captured by Microsoft Defender for Identity and other authentication activities related to Microsoft online services captured by Microsoft Defender for Cloud Apps.",
+    "columns": ["Timestamp", "ActionType", "Application", "LogonType", "Protocol", "FailureReason", "AccountName", "AccountDomain", "AccountUpn", "AccountSid", "AccountObjectId", "AccountDisplayName", "DeviceName", "DeviceType", "OSPlatform", "IPAddress", "Port", "DestinationDeviceName", "DestinationIPAddress", "DestinationPort", "TargetDeviceName", "TargetAccountDisplayName", "Location", "ISP", "ReportId", "AdditionalFields", "FirstSeen", "IPCategory", "IPTags", "LastSeenForUser", "RawEventData", "ThreatIndicators", "UncommonForUser", "UserAgent"]
+  },
+  "28": {
+    "name": "IdentityQueryEvents",
+    "description": "Query activities performed against Active Directory objects, such as users, groups, devices, and domains",
+    "columns": ["Timestamp", "ActionType", "Application", "QueryType", "QueryTarget", "Query", "Protocol", "AccountName", "AccountDomain", "AccountUpn", "AccountSid", "AccountObjectId", "AccountDisplayName", "DeviceName", "IPAddress", "Port", "DestinationDeviceName", "DestinationIPAddress", "DestinationPort", "TargetDeviceName", "TargetAccountUpn", "TargetAccountDisplayName", "Location", "ReportId", "AdditionalFields"]
+  },
+  "29": {
+    "name": "UrlClickEvents",
+    "description": "Events involving URLs clicked, selected, or requested on Microsoft Defender for Office 365 from email messages, Microsoft Teams, and Office 365 apps in supported desktop, mobile, and web apps.",
+    "columns": ["Timestamp", "Url", "ActionType", "AccountUpn", "Workload", "NetworkMessageId", "ThreatTypes", "DetectionMethods", "IPAddress", "IsClickedThrough", "UrlChain", "ReportId"]
+  }
+}

@@ -1,0 +1,416 @@
+\section{Methodology}
+\label{s:methodology}
+
+% In LaTeX, label must come after caption. Your figure has label inside the includegraphics. Make sure referencing ref a tcolorbox is working.}
+
+% \Fix{Missing citations: In-context learning / few-shot, Multi-agent frameworks, Retrieval-augmented prompting, Text-to-SQL constraints, LLM-as-a-judge}
+% Half-RESOLVED
+
+% \Fix{We should be using concrete examples of inputs and outputs whereever possible to increase the readabilty of our methodology like you have seen in the other papers you have read. We don't have even one concrete example in the whole paper. Maybe you can use one example NLQ and then show how different prompting give different outputs.}
+% RESOLVED
+
+
+% \Fix{You sometimes say “all Defender tables,” elsewhere your figure implies Top-5.}
+% RESOLVED, all defender tables is only referenced in the 
+
+% \Fix{You say you “eliminate Query Refiner” but later the Oracle “refines.” Clarify the difference between NL2KQL’s refiner and your Oracle refinement step.}
+% RESOLVED
+
+% \Fix{What is “Semantic Data Catalog”
+% You name this component but do not define it. Give a short definition and how it is built/used.}
+% RESOLVED
+
+% \Fix{In Multi-agent SLM state precisely: number of SLM instances, temperatures used, whether they run in parallel, timeout policy, and how you handle non-parsable outputs.}
+% RESOLVED
+
+% \Fix{Zero-Shot with Schema needs to be defined well.}
+% RESOLVED
+
+% \Fix{You say tips are based on “most common errors,” but you do not define how you mined errors.}
+% RESOLVED
+
+% \Fix{Ensure the architecture figure is referenced from Methods with consistent naming and that labels are placed after captions.}
+% RESOLVED
+
+% \Fix{Here is my proposal to arrange the Methodlogy section. But I will leave up to you to decide. 1) Problem Statement: Task definition (NLQ→KQL), define all the notations (q, etc.). 2) Prompting Baselines 3) Few-Shot Retrieval 4) Error-Aware Prompting 5)  NL2KQL Baselines 5) Multi-Agent + Oracle}
+% ACKNOWLEDGED - this is likely a better arrangement but due to time and rearranging, I'll keep this way for now. Will make edits later if I have time.
+
+% Furthermore, we also experiment
+% to see how well few-shot prompting and schema context supplementation combined work to improve the quality of KQL queries. In order to supply the most
+% relevant few-shot examples, we make use of the Few-Shot Synthetic Database (FSDB) provided through NL2KQL and apply cosine-similarity between the NLQ
+% and FSDB entries to determine the Top 2 most relevant NLQs to feed into the prompt. We apply the following prompting strategy in the few-shot prompting scenario:
+
+% \begin{tcolorbox}[enhanced,attach boxed title to top center={yshift=-3mm,yshifttext=-1mm},
+%   colback=blue!5!white,colframe=blue!75!black,colbacktitle=blue!80!black,
+%   title=Few-Shot Prompting with Schema Context,fonttitle=\bfseries,
+%   boxed title style={size=small,colframe=red!50!black} ]
+%   You are a programmer using the Kusto Query Language with Microsoft Defender. Utilize the following tables, columns, and data types:
+%   \newline
+%   \newline
+%   \{SCHEMA\}
+%   \newline
+%   \newline
+%   Return only the KQL code without any explanation. Here are some examples:
+%   \newline
+%   \newline
+%   \{EXAMPLES\}
+%   \newline
+%   \newline
+%   \{Natural Language Query\}
+% \end{tcolorbox}
+
+
+% \begin{tcolorbox}[enhanced,attach boxed title to top center={yshift=-3mm,yshifttext=-1mm},
+%   colback=blue!5!white,colframe=blue!75!black,colbacktitle=blue!80!black,
+%   title=Alternative Prompt \#2,fonttitle=\bfseries,
+%   boxed title style={size=small,colframe=red!50!black} ]
+%   You are a programmer using the Kusto Query Language with Microsoft Defender. Focus on producing syntactically and semantically correct KQL queries, you may use the following tips to help as well:
+%   \newline
+%   \newline
+%   1. Use the following structures to describe a timestamp: between(datetime(``2025-01-01T12:00:00Z" .. datetime(``2025-01-01T12:01:00Z")), Timestamp $<$ ago(7d)
+%   \newline
+%   2. Use the has\_any or has\_all keywords when searching for multiple strings in a column. Use the following structure: ``Column has\_all (A, B, C)", ``Column has\_any(A, B, C)" instead of ``Column contains("A", "B", "C")"
+%   \newline
+%   3. Instead of using ``project *" to return all columns when generating a KQL query, omit this statement entirely.
+%   \newline
+%   4. When generating a KQL query, ensure that ALL columns mentioned in the result belong to the correct table mentioned.
+%   Utilize the following tables, columns, and data types:
+%   \newline
+%   \newline
+%   \{SCHEMA\}
+%   \newline
+%   \newline
+%   Return only the KQL code without any explanation. Here are some examples:
+%   \newline
+%   \newline
+%   \{EXAMPLES\}
+%   \newline
+%   \newline
+%   \{Natural Language Query\}
+%   \label{box:rq3-box3}
+% \end{tcolorbox}
+
+% \Fix{In Multi-agent SLM state precisely: number of SLM instances, temperatures used, whether they run in parallel, timeout policy, and how you handle non-parsable outputs.}
+
+% The second prompting strategy we attempt is Schema Context Supplementation. Schema Context Supplementation provides relevant tables, columns, and their respective
+% data types to the SLM in order for the model to determine which tables and columns are most relevant with respect to the NLQ. More specifically, a table's schema can
+% be defined as a list of columns and data types that belong to a particular table. Providing relevant schema context can ensure that the model has adequate information
+% in order to make a proper decision as to what would constitute a valid KQL query. We take the main components of the previous prompt, and augment this prompt by supplying
+% all tables and columns that belong to Microsoft Defender as well. We experiment its effectiveness with the following prompt:
+
+% \begin{tcolorbox}[enhanced,attach boxed title to top center={yshift=-3mm,yshifttext=-1mm},
+%   colback=blue!5!white,colframe=blue!75!black,colbacktitle=blue!80!black,
+%   title=Zero-Shot Prompting with Schema Context,fonttitle=\bfseries,
+%   boxed title style={size=small,colframe=red!50!black}, label = {box:rq2}]
+%   You are a programmer using the Kusto Query Language with Microsoft Defender. Utilize the following tables, columns, and data types:
+%   \newline
+%   \newline
+%   \{SCHEMA\}
+%   \newline
+%   \newline
+%   Return only the KQL code without any explanation.
+%   \newline
+%   \newline
+%   \{Natural Language Query\}
+% \end{tcolorbox}
+
+% The prompt above provides information about the correct Microsoft Connector System (i.e. Microsoft Defender) and Microsoft Defender's data schema needed in
+% order to produce an accurate KQL query. By supplying additional table and column information in the prompt, we give the model enough information
+% to properly reason which tables and columns to utilize, while simultaneously allowing the model to reason about the most relevant tables and columns
+% needed in the result query.
+% \\
+
+% Few-Shot Prompting and
+
+
+
+
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=\columnwidth]{fig/knobs.png}
+    \caption{Orthogonal Enhancement Knobs: Prompting Scheme Enhancements Fine-Tuning with LoRA, and Multi-SLM Architecture with Oracle Refinement 
+    % \Fix{Update this diagram with COT}
+    }
+    \label{fig:knob_diagram}
+    \vspace{-2ex}
+\end{figure}
+
+\subsection{Problem Statement}
+\label{s:problem}
+
+% \Fix{'Two' knobs but three listed.}
+% \Fix{Q should represent all syntactically valid KQL queries. Not just model generated. the model output is q hat that exist in Q.}
+% \Fix{you define s belongs to S for schema context.  But earlier you defined S as set of all possible columns.}
+% \Fix{KQL commonly unions/joins multiple tables; your definition restricts to "each single table."}
+% \Fix{You call a KQL query “model-generated,” but Q should be all possible KQL queries; the model output is}
+% \Fix{VERY IMPORTANT: You say "valid KQL query" but do not define validity (syntax vs semantic executability). This should be clarified.}
+
+We seek to formally define the problem space of SLM KQL code generation, which guides the design of our evaluation framework. A NLQ is defined as a request that a user wishes to be answered in terms of KQL. The set $\mathcal{T}$ represents the set of all possible NLQs. A schema is defined as the
+columns that are associated with each single table in KQL. The set $\mathcal{S}$ represents the set of all possible schema contexts that are associated with tables in KQL. Lastly, the set $\mathcal{Q}$ represents the set of all possible KQL queries.
+
+Given an NLQ, $t \in \mathcal{T}$ and optional schema context $s \in \mathcal{S}$, the main objective is for a model to produce a
+syntactically and semantically valid KQL query $\hat{q} \in \mathcal{Q}$. We study a translator configured by three orthogonal enhancement knobs: $\mathbf{P}$ (Prompting Scheme Enhancements),
+$\mathbf{M}$ (Multi-SLM Architecture with Oracle Refinement), and $\mathbf{F}$ (Fine-Tuning with LoRA). Each configuration induces a mapping:
+\[
+F_{\mathcal{L},\mathbf{P},\mathbf{M}, \mathbf{F}} : (t,s) \rightarrow \hat{q}
+\]
+for a base model $\mathcal{L}$, and we evaluate $\hat{q}$ with syntax validity, semantic equivalence, table and filter metrics, latency, and cost.
+Our experiments vary these knobs to quantify the marginal contribution of each knob while keeping the base model and datasets fixed.
+
+
+\subsection{Zero-Shot Prompting}
+% \Fix{You write: "Zero-Shot prompting aims to simulate human-like thinking.” That is incorrect. }
+% \Fix{Refer to Figure~\ref{fig:naive_zeroshot} in this subsection.}
+
+% \Fix{CITATION?}
+The Zero-Shot prompting strategy aims to interact with the model without containing any relevant examples or demonstrations \cite{Prompt_Engineering_Guide}. Zero-Shot prompting can be an extremely powerful technique, as it typically utilizes less tokens than other prompting
+strategies and relies mostly on the inference capabilities of the language model itself. Furthermore, instruction tuning has been shown to improve 
+Zero-Shot learning capabilities \cite{Payong_2024}.
+
+We begin by testing with Zero-Shot prompting strategies. Zero-Shot prompting strategies allow us to establish a baseline performance for how SLMs perform in developing KQL queries without any supplemental information. Furthermore, it allows us to understand
+how powerful the model is in generating relevant KQL queries as a standalone system. The first prompting strategy is outlined in Figure~\ref{fig:naive_zeroshot} in Appendix~\ref{sec:zeroshot-prompt}.
+
+
+
+% \Fix{What is following prompt}
+
+In this first prompting strategy, we set the context for the SLM to understand that they are to generate a KQL query that meets the needs of an NLQ.
+We then provide the NLQ and allow the SLM to think about what may constitute as a valid KQL query with respect to the NLQ
+provided. This allows us to establish a baseline of how SLMs perform with respect to generating KQL queries as a standalone system.
+
+
+
+\subsection{NL2KQL-Inspired Prompting}
+\label{sec:nl2kql-config}
+
+In addition to Zero-Shot prompting, we re-implement NL2KQL~\cite{nl2kql}, the state-of-the-art system for KQL query generation.
+NL2KQL consists of five main components: Semantic Data Catalog, Schema Refiner, Few-Shot Selector, Prompt Builder, and Query Refiner.
+For detailed descriptions of these components, we refer the reader to the original paper~\cite{nl2kql}.
+Below, we describe the changes we made in our recreation.
+
+\subsubsection{Semantic Data Catalog}
+We recreate the Semantic Data Catalog by generating table and value embeddings from the Microsoft Defender schema.
+While NL2KQL relies on the text-embedding-ada-002 embedding model to generate embeddings, we use Google's \texttt{text-embedding-004} model
+to construct both the Table Embedding Store and Value Embedding Store. Google's text-embedding-004 model is lightweight, and provides embeddings at a cost of \$0.025 per one million input tokens, compared to \$0.10 per one million input tokens for
+\texttt{text-embedding-ada-002} embedding model.
+
+\subsubsection{Schema Refiner} \label{sssec:schema-refiner}
+Consistent with~\cite{nl2kql}, the Schema Refiner retrieves the top-$t$ relevant tables and associated columns using cosine similarity
+between the NLQ and the embeddings. As in the original, $t=9$ and $v_{\text{n}}=5$.
+We follow the same procedure but base our embeddings on the recreated Semantic Data Catalog.
+
+\subsubsection{Few-Shot Selector}
+\label{sssec:shot-selector}
+The original NL2KQL constructs a Few-Shot Synthetic Database (FSDB) from synthetic NLQ-KQL pairs sampled from Microsoft Defender tables and categorized into five themes (Explore, Expansion, Detect, Remediate, Report). While it discards invalid primary and secondary queries during generation, we generate all pairs first and then assess syntactic and semantic correctness, improving overall efficiency and resource use. We use Google Gemini 2.0 Flash to build the FSDB, which enables fast generation and produces mostly correct KQL queries. As in the original, the top-$t$ tables from the Schema Refiner filter the FSDB, and the top-$f$ examples ($f=2$) are selected using cosine similarity to the NLQ.
+
+
+\subsubsection{Prompt Builder}
+We preserve the design of the Prompt Builder from~\cite{nl2kql}, which combines detailed instructions, syntax rules, best practices,
+and few-shot examples into a single prompt template.
+
+\subsubsection{Query Refiner} \label{sssec:query-refiner}
+We implement the Query Refiner following~\cite{nl2kql}, which uses Microsoft’s KQL Parser~\cite{Kusto-Query-Language} to verify syntactic
+and semantic correctness, detect undefined identifiers, repair aggregate functions, fix parentheses, and add missing operators.
+We retain the embedding-based replacement strategy with a cosine similarity threshold of 0.9.
+
+\subsubsection{Alternative Prompting Strategies}
+Beyond faithfully reimplementing NL2KQL~\cite{nl2kql}, we introduce prompting strategies that supply models with targeted tips on common errors. The first focuses on frequent syntactic issues identified via the KQL Parser. The second adds guidance for semantic errors such as mismatched column types and invalid table references. We compare both strategies and adopt the one with the highest correctness. Due to SLMs' limited inference capabilities, concise, model-specific tips help them generate more accurate KQL compared to supplying the full syntax and semantic rules. Our reimplementation substitutes Google's \texttt{text-embedding-004} for embeddings, uses Google Gemini 2.0 Flash and Microsoft Phi-4 for query generation, and shifts correctness filtering to post-generation. We further extend prompting with error-aware instructions to assess whether targeted guidance improves KQL generation.
+
+
+% \subsection{NL2KQL-Inspired Prompting}
+% \label{sec:nl2kql-config}
+% In addition to zero-shot prompting, we explore another methodology as well: NL2KQL Configuration prompting. We consider NL2KQL \cite{nl2kql} as the state-of-the-art system for KQL query generation.
+% NL2KQL achieves the KQL code generation objective by utilizing multiple different components, including a Semantic Data Catalog, Schema Refiner, Few-Shot Selector, Prompt Builder, and Query Refiner. Below we explain each of these components in-depth:
+
+% \subsubsection{Semantic Data Catalog}
+% The Semantic Data Catalog consists of two main components: Table Embedding Store and Value Embeddings Store. The purpose of the Table Embedding Store
+% is to generate an embedding for each table defined in the NL2KQL Defender Schema by embedding its table name, table description, and table schema. This
+% helps for the NL2KQL system to understand which are the most relevant tables to be used when generating a KQL query. The Value Embedding Store is comprised
+% of embeddings from each unique value that belongs to each column in each table in the NL2KQL Defender Schema. This helps the NL2KQL system understand which
+% enumerated values should be used in the KQL query result. To recreate the semantic data catalog, we use Google's text-embedding-004 embedding model.
+
+% \subsubsection{Schema Refiner}
+% \label{sec:schema-refiner}
+% The Schema Refiner acts as a means to provide adequate contextual information to the model while generating a KQL query. This information includes relevant table
+% and column information from Microsoft Defender to prevent models from hallucinating or generating semantically incorrect KQL queries. To determine the most relevant
+% tables and columns, the Schema Refiner calculates the cosine similarity between the embedding of the NLQ and the Table Embeddings and Value
+% Embeddings, and retrieves the Top $t$ most relevant tables and their respective schemas, as well as the Top $v_{\text{n}}$ column values from the top $v_{\text{c}}$ columns.
+% In NL2KQL \cite{nl2kql}, $t$ is set to a maximum value of 9, and $v_{\text{n}}$ is set to the maximum value of 5.
+
+% \subsubsection{Few-Shot Selector}
+% \label{sec:shot-selector}
+% The Few-Shot Selector is comprised of a Few-Shot Synthetic Database (FSDB) as well as additional filtering modules that serve to identify the most relevant few-shot examples to supply to the prompt.
+% The motivation behind utilizing a few-shot selector lies in the fact that LLMs have proved to be strong learners when supplied with examples (citation needed). The FSDB is created with respect
+% to the Microsoft Defender Database, and only consists of NLQ-KQL pairs that are relevant to Microsoft Defender. As highlighted in NL2KQL \cite{nl2kql},
+% synthetic KQL generation begins with random sampling of tables that belong to the Microsoft Defender Database. In 70\% of synthetically-generated KQL queries, only one table is sampled. For the remaining 30\%,
+% a second table is chosen in order to use joins and increase the complexity of the KQL queries. From here, one of the following five themes is randomly selected:
+
+% \begin{enumerate}
+%   \item Explore: Look for signs or hints of a security attack
+%   \item Expansion: Searches for additional contextual understanding for the scenario
+%   \item Detect: Look for events related to a security attack
+%   \item Remediate: Identify all events for a given entity or asset
+%   \item Report: Provide summary statistics that helps with writing a report
+% \end{enumerate}
+
+% Once the tables and themes have been randomly selected, an LLM generates a primary KQL query based on the information provided. Once this primary KQL query has been generated, the LLM is then asked to explain the primary KQL query in terms of natural language,
+% which generates an associated NLQ to the primary KQL query. From here, the associated NLQ is fed back to the LLM to generate a secondary KQL query. Once both KQL queries are generated, Jaccard Similarity is used to assess the similarity of their tokens and rejected if their similarity falls below a threshold of 0.7. In the original paper, NL2KQL \cite{nl2kql} discards syntactically and semantically incorrect primary and secondary KQL queries.
+% However, in this recreation we assess the syntactic correctness and semantic correctness of the synthetically created NLQ-KQL pairs afterwards. To recreate the FSDB, we utilized Google Gemini 2.0 Flash to generate synthetic NLQ-KQL pairs.
+
+% To determine the most relevant few-shot examples, the top $t$ tables determined through the schema refiner are fed into the few-shot selector, and the FSDB is filtered to only include NLQ-KQL pairs whose KQL queries contain tables that are included in the
+% top $t$ tables. From here, the embeddings of the NLQ supplied by the user are compared to the filtered few-shot examples via cosine similarity, and the top $f$ examples are chosen to supplement the prompt. In NL2KQL, $f$ is set to 2.
+
+% \subsubsection{Prompt Builder}
+% \label{sec:prompt-builder}
+% The purpose of the prompt builder in NL2KQL is to provide a framework to feed a prompt to an LLM. In the initial configuration, the original prompt that is fed into the NL2KQL system contains detailed instructions that contain proper contextual information for the LLM,
+% the steps that are needed in order to produce a KQL query output, relevant syntax rules that would be beneficial in creating KQL queries, best practices when generating KQL queries, and the most relevant few-shot examples to give to the model via prompting. The information
+% provided through this prompt builder is sufficient to allow the model to reason and determine the proper course of action in creating a KQL query.
+
+% \subsubsection{Query Refiner}
+% \label{sec:query-refiner}
+% As a final last step, NL2KQL contains a query refiner that serves as a post-processing step in verifying syntactic and semantic correctness of model-generated KQL queries. Syntactic and Semantic correctness is verified with the help of Microsoft's KQL Parser \cite{Kusto-Query-Language}.
+% The Query Refiner serves four main purposes:
+
+% \begin{enumerate}
+%   \item Detect undefined identifiers, and find substitute replacements.
+%   \item Add the missing summarize operator when aggregate functions are used improperly.
+%   \item Add properly paired parentheses for the between operator.
+%   \item Add missing extend operator.
+% \end{enumerate}
+
+% As outlined in NL2KQL \cite{nl2kql}, in order to find adequate replacements for undefined identifiers, the Query Refiner uses embeddings
+% of columns' and tables' descriptions, with a strict cosine similarity threshold of 0.9, to find substitute identifiers.
+
+% We have reimplemented the NL2KQL pipeline with some substitutions, utilizing two LLMs for response generation: Google Gemini 2.0 Flash and Microsoft Phi-4. The
+% goal of reimplementing this system is to compare how effective the system is with respect to traditional zero-shot prompting strategies that have
+% been discussed thus far. We also seek to assess how NL2KQL performs under different enhancement circumstances.
+
+% Furthermore, in addition to NL2KQL configuration prompting we also attempt additional prompting strategies that supply helpful tips to the model based on different
+% types of errors generated in the NL2KQL prompting scenario. The purpose of supplying these tips to the model is so that the model can be instructed to
+% look for certain errors that may occur when generating the KQL queries, and rectify them before outputting a final answer. This is based on common
+% syntax errors that were found after utilizing a few-shot prompting approach. Finding syntax errors within SLM-generated KQL queries was conducted with
+% the help of Microsoft's KQL Parser \cite{Kusto-Query-Language}. The alternative prompting scenarios are noted as follows:
+
+
+
+% In the first altered prompt, we only supply one tip based on most commonly found syntax errors. However, to build on this prompt we use the
+% KQL Parser to determine the most common semantic errors and supply the prompt with additional helpful tips that may improve metric scores. While
+% syntactic errors focus on whether a KQL query's overall structure is correct and sound, semantic errors focus on whether a KQL query is correct
+% with respect to its table's schema. Therefore, it is possible for a KQL query to be syntactically correct but not semantically correct.
+
+
+% In the second alternative prompt above, we outline commonly seen semantic errors and some additional useful KQL tips that may assist the model in developing syntactically
+% and semantically correct queries. From here, we analyze which alternative prompting techniques were most effective and use the most effective
+% prompting strategy in order to build a system that can be leveraged to create syntactically and semantically correct KQL queries.
+
+\subsection{LoRA Fine-Tuning with LLM Distillation}
+
+% \Fix{The phrase "adds additional decompositional matrices to layers within the transformer structure" is vague.}
+
+% \Fix{"This allows the SLMs to preserve its nature of greater data integrity" what is data integrity. It is unclear. SLMs do not preserve data integrity; they preserve efficiency and deployment feasibility.}
+
+% \Fix{You say “We choose Gemini 2.0 Flash as a teacher model due to lower input/output ..." A reviewer may see this as underspecified. If correctness is also a motivation, you need to show why Gemini is sufficient vs other stronger LLMs. Otherwise it sounds like cost-cutting only.}
+
+% \Fix{ADD COT in this subsection.}
+To further assess the quality of KQL queries that are generated from SLMs, we also test LoRA, a fine-tuning method that freezes pre-trained model weights from language models, and applies decompositional matrices to transformers layers within the LLM in order to alter a subset of model weights \cite{LoRA}. The goal of this method is to train SLMs on NLQ-KQL pairs so that SLMs can be further improved in producing quality responses. LoRA can be mathematically defined as follows:
+
+Given a weight matrix, $\mathcal{W}$, we decompose the weight matrix into two smaller matrices such that:
+
+\begin{center}
+  $\mathcal{W'}$ = $\mathcal{W}$ + $\Delta{W}$ = $\mathcal{W}$ + $AB$ 
+\end{center}
+
+Where B $\in$ $\mathbb{R}^{d \times r}$, A $\in$ $\mathbb{R}^{r \times k}$, and both are low-rank matrices. During training time, the values of the original weight 
+matrix $\mathcal{W}$ remain stable while $\Delta{W}$ ($AB$) is updated. Altering low-rank matrices instead of the entire weight matrix reduces the memory requirements, 
+gradient storage, and optimizer states needed to perform fine-tuning \cite{Improving_Phishing_Email_Detection}. To train the Gemma-3-4B-IT SLM, we use a synthesized dataset created through LLM Knowledge Distillation.
+
+LLM Knowledge Distillation is a transfer learning technique in Machine Learning that is used to relay the inference and reasoning capabilities of larger, proprietary LLMs to smaller SLMs. This allows the SLMs to preserve its nature of 
+greater efficiency, deployment feasibility, and faster inference capabilities while also receiving the knowledge of LLMs in its own reasoning processes \cite{Distillation}.
+% This process is often described as a teacher transferring knowledge to a student, where the teacher model is typically a larger LLM with greater inference reasoning capabilities, and the student model is the SLM with faster inference capabilities
+% , separated by a special \texttt{<SEP>} token (i.e., \texttt{[EXPLANATION] <SEP> [KQL]})
+
+Using the same process that was used to create a FSDB when reimplementing NL2KQL, we create a synthetic dataset of 1,000 NLQ-KQL pairs that are verified to be syntactically and semantically correct using the KQL Parser. The teacher model that is used to create the synthetic dataset of NLQ-KQL pairs 
+is Gemini 2.0 Flash. We choose Gemini 2.0 Flash as a teacher model due to lower input/output token costs while also showing promise in generating syntactically and semantically correct KQL queries. 
+To expose the student to reasoning signals, we augment each NLQ--KQL pair with a short chain-of-thought (COT) explanation generated by the teacher (Gemini~2.0 Flash). During supervised fine-tuning, the target sequence is a two-part output: the explanation followed by the final KQL. At inference, we report results for both \emph{reason-then-answer} decoding (model emits explanation and KQL) and \emph{answer-only} decoding (model emits KQL directly). This rationale-augmented setup aims to distill not only the teacher’s answers but also its transformation process, improving robustness and compositional correctness without increasing model size.
+Then using the LoRA Fine-Tuning technique, we fine-tune a student model, Gemma-3-4B-IT, using supervised fine-tuning. Of the 1,000 NLQ-KQL 
+pairs generated, 800 NLQ-KQL pairs are used for fine-tuning the SLM and 200 of the NLQ-KQL pairs are used as a validation set.
+
+\begin{figure}[!t]
+    \centering
+    \begin{tcolorbox}[enhanced,
+      attach boxed title to top center={yshift=-3mm,yshifttext=-1mm},
+      colback=blue!5!white,
+      colframe=blue!75!black,
+      colbacktitle=blue!80!black,
+      title=Oracle Prompting Methods,
+      fonttitle=\bfseries,
+      boxed title style={size=small,colframe=red!50!black},
+      left=2mm, right=2mm, top=2mm, bottom=1mm, boxsep=1pt
+    ]
+    \footnotesize
+    \textbf{Oracle for Retrieval and General Refinement:}
+    \newline
+    Given a Natural Language Query and a list of KQL queries, determine which of the following KQL queries is most syntactically and semantically correct:
+    \newline\newline
+    Natural Language Query:
+    \newline
+    Responses:
+    \newline\newline
+    Make changes as necessary to refine the best KQL query, and ensure that each column in the KQL query belongs to its respective table(s).
+    Return the correct answer without explanation.
+    
+    \rule{\linewidth}{0.4pt}
+    
+    \textbf{Oracle for Retrieval and Schema Context:}
+    \newline
+    Given a Natural Language Query and a list of KQL queries, determine which of the following KQL queries is most syntactically and semantically correct:
+    \newline\newline
+    Natural Language Query:
+    \newline
+    Responses:
+    \newline\newline
+    Make changes as necessary to refine the best KQL query, and ensure that each column in the KQL query belongs to its respective table(s).
+    You may use the following tables and columns:
+    \newline\newline
+    \{SCHEMA\}
+    \newline\newline
+    Return the correct answer without explanation.
+    \end{tcolorbox}
+    \caption{Oracle prompting templates used to guide refinement of model-generated KQL queries. The first oracle uses retrieval and refinement only, while the second incorporates schema context.}
+    \label{fig:oracle-prompting}
+\end{figure}
+
+% \Fix{Refer to the Figure~\ref{fig:oracle-prompting} instead of saying following or below prompt.}
+
+\subsection{Two-Staged Architecture}
+
+% \Fix{Don't use "Multi-AI Agent System"}
+
+% \Fix{Caption also says "Multi-Agent SLM architecture". Wrong.}
+
+% \Fix{You state: "each instance's temperature parameter is set to 1." But you only describe one SLM}
+
+% \Fix{You say: “we also eliminate parts of the design, such as the Query Refiner, and replace this component...”
+% Later: “The oracle model acts as a query refiner by ...". You replace and eliminate. Needs to be clarified.}
+
+% \Fix{You say: "we select top 5 instead of top 9 values and omit column values to reduce token count and prevent SLM hallucinations." Should specify why 5 instead of 9 — otherwise it looks arbitrary. REVIEWERS WILL CRITIZE THIS.}
+
+% \Fix{Move any performance claims (“performs best,” “cheaper”) out of §3 and into §4. Keep §3 strictly about how you do things.}
+% Alternative: Show many tokens it saves per running (on average), should this be an ablation study?.
+
+
+
+To improve KQL generation quality from SLMs, we adopt a Two-Staged Architecture using LangChain to route queries through a single Gemma-3-4B-IT instance with temperature set to 1. Using SLMs for initial generation reduces costs compared to LLMs, which are more expensive for large inputs. The SLM outputs are then passed to an Oracle model, Gemini 2.0 Flash, which selects the best syntactic and semantic response while keeping token usage low. The Oracle further refines the chosen KQL to maximize correctness. This design builds on NL2KQL but adapts it for SLMs. We retain the Semantic Data Catalog, Schema Refiner, and Prompt Builder, but replace the Query Refiner with the Oracle, which revises the KQL to ensure both syntactic and semantic validity.
+
+
+As described in Section~\ref{sssec:schema-refiner}, the Schema Refiner retrieves the top t relevant tables based on cosine similarity. In our modified pipeline, we select top 5 instead of top 9 values and omit column values to reduce token count and prevent SLM hallucinations. Table~\ref{tab:appendix-ablation-tables} outlines the effects of varying the number of tables provided on overall metrics.
+Using the few-shot examples selected as described in Section~\ref{sssec:shot-selector}, we feed these to a Gemma-3-4B-IT instance. We then replace the Query Refiner (Section~\ref{sssec:query-refiner}) with an oracle LLM as it allows for a more automated process, and allows for different types of errors to be fixed. A full diagram of our approach can be seen in Figure~\ref{fig:architecture_diagram}.
+
+\begin{figure}[!t]
+  \centering
+  \includegraphics[width=\columnwidth]{fig/slm-project.png}
+  \caption{Two-Stage Architecture with Oracle Refinement. The NLQ is embedded to retrieve the Top 5 relevant tables, which guide the selection of Top 2 few-shot examples. These are processed by Gemma-3-4B-IT, and the outputs are refined by the Oracle model.}
+  \label{fig:architecture_diagram}
+\end{figure}
+
+The oracle operates in two modes. In \emph{refinement-only}, it selects and edits the best SLM candidate using the judge model's internal knowledge. In \emph{schema-aware refinement}, it performs the same process but with explicit schema context. We evaluate both modes using two prompts (Figure~\ref{fig:oracle-prompting}). The oracle is instantiated as an LLM-as-a-Judge, leveraging evidence that judge models align well with human preferences while exhibiting recognizable biases~\cite{zheng2023judging}.
