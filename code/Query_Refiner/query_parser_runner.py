@@ -306,9 +306,9 @@ for idx, row in merged_df.iterrows():
                     cond_two = 1
 
             # Condition Three:
-            if re.search(r'between (.*)\|\n?', revised_query):
+            if re.search(r'between (.*)\n\|', revised_query):
     
-                between_section = re.search(r'between (.*)\|\n?', revised_query).group(1)
+                between_section = re.search(r'between (.*)\n\|', revised_query).group(1)
                 between_section_new = between_section
                     
                 counter = 0
